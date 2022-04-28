@@ -1,1 +1,20 @@
-<search/>
+<search><entry><title>使用hugo在github上搭建独立博客</title><url>https://d-j.fun/post/notes/2022/0426_hugo_hosted_on_github/</url><categories><category>技术</category></categories><tags><tag>Github</tag><tag>Hugo</tag></tags><content type="html"> hugo golang编写的静态化网站构建工具，速度、灵活是两个标榜的特点。选择该工具的原因：有自己喜欢的模版、方便的自定义、快速的调试，最关键是可以git版本化管理内容，不用依托于mysql，这是最关键的原因。
+github pages更是提供了免费的托管，同时github actions提供自动化编译，搭配起来是完美。
+纵览搭建过程 Hugo 在本地初始化git仓库，在该仓库中搭建hugo环境，主要是选择自己喜欢的模板 Hugo 主题 。接下来比较耗费时间的是，根据自己需要修改模板：比如title、description，还有一些样式，很多没有定义在配置里，就需要自己在layouts中找到对应的文件进行修改，不过hugo的文件结构比较清晰，有过网站开发经验的很容易找到规律。
+Github 本地准备完毕后便可以将整个hugo环境推到github，然后利用github actions自动化构建，便完成基础搭建。 hugo官方提供的有github actions yml文件，可以根据自己需要改动。
+一般的流程是：
+拉取代码 hugo编译 代码推送到gh-pages分支 最终在github仓库的设置里，将pages分支设置为gh-pages，便可以通过【github username】.github.io网址，看到自己的博客雏形了。
+详细搭建过程 本小节除了给出一些必要的安装步骤，还会推荐一些工具搭配，除了有利于搭建过程、对以后博客坚持写作也有帮助。同时一些安装过程中踩到的坑，也会在具体步骤中标注。
+Hugo环境 官网给出了无比详细的、各个平台的安装步骤 Hugo 安装 , 直接选择自己的操作系统，一步步安装即可。由于博主开发机是mac pro，直接一步到位 brew install hugo
+打开 terminal (推荐安装iTerm2), 输入hugo version, 如果输出hugo版本，代表安装成功，并正确配置了执行路径。如果提示找不到命令，原因可能是 hugo执行程序不在环境变量PATH中，将程序放到PATH路径中，一般是bin、/user/bin等，或者执行export PATH=&amp;quot;$PATH:hugo安装路径&amp;quot;，再次执行hugo version。一般的问题都出在这里，如果不符合自己的情况，可以再仔细阅读官方安装文档，或者通过评论联系博主。
+新建网站：hugo new site [eight]。该命令会在执行命令的当前路径，新建eight文件夹，目录中比较重要的有themes目录, config.toml。执行完命令，用一款编辑器打开目录，熟悉一下目录结构，毕竟以后写博客都要面对这些目录。推荐安装sublime，博主开发环境都选择idea，随意选择了goland。无论选择什么编辑器，方便的文件管理、目录结构、markdown编辑预览功能是必须具备的。工具一定要选择一个适合自己，功能方便的，涉及到自己的写作体验。
+Hugo主题 hugo主题选择，个人喜好问题，不过不建议花太多时间在这上面，毕竟搭建博客是为了记录、分享内容（虽然博主纠结了好久，最终选择了next）。
+hugo主题安装三种选择，不同的选择，各有优劣，视自己具体情况而定：
+git submodules: git submodule add 主题仓库地址 themes/主题名称，该方法适合于以后完全不会自己修改模板的人，好处是如果模板主题作者修改了模板，还可以随时更新到最新。但是如果想自定制一些功能，就得去原作者仓库提交pr。 将文件复制到themes目录：在其他目录下载完themes文件，将文件夹复制到themes目录下，随着你的git仓库一块提交，相当于在你的仓库里增加文件内容。这样你可以随意修改模板、样式，但是相对于根目录来说，themes有很多部分是重合的，如果是极度洁癖慎用。 将模板对应的文件夹，覆盖根目录对应文件：该方法具有第二种方法的随意修改的有点，而且文件也不会出现冗余，博主选择该方法。 执行hugo server，在命令提示中可以看到 localhost:1313 (如果你在另外一个地方执行过了，可能是其他端口)，将该地址复制到浏览器地址栏，点击访问，便可以实时预览自己的博客。如果你修改了博客中的模板、样式、文章等，保存后便可以在这个地址看到。
+这个时候，便可以修改logo、博客名称、博客描述，最好加一篇文章方便调试。
+Github Pages部署 上面步骤好了之后，便可以部署github pages了。注意一点：一个github账号，只有一个github.io的域名（【github username】.github.io），如果不是规划该账号下，多个项目对应一个域名，那么建议新建一个github账号。
+假设你的账号用户名 eight（小八），那么可以新建一个public仓库eight.github.io (这样命名，github会默认开启pages功能，不过不强求)，copy仓库地址。然后在本地仓库执行git remote add origin 仓库地址，然后将代码推送到GitHub仓库。有一个点，github主分支默认是main，本地一般都是master。具体用哪个自己偏好决定。
+在项目根目录添加.github/workflows/gh-pages.yml文件：
+name: github pages # 任务名称 on: push: branches: - main # 触发分支 jobs: deploy: runs-on: ubuntu-20.04 # 任务执行环境 steps: # 每个步骤：name 步骤名称，uses 使用组件，with 参数 - name: Check out repository code # 下载代码 uses: actions/checkout@v2 with: submodules: true - name: Setup Hugo # 下载hugo uses: peaceiris/actions-hugo@v2 with: hugo-version: &amp;#39;latest&amp;#39; ## extended: true - name: ls # 最好加这一步，要不然报错都不知道为啥，查看工作空间文件 run: ls ${{ github.workspace }}/themes/hugo-theme-next2/ - name: Build # 构建 run: hugo --minify - name: Deploy # 部署 uses: peaceiris/actions-gh-pages@v3 with: github_token: ${{ secrets.GITHUB_TOKEN }} publish_dir: ./public 推送到github之后，会自动按照这个yaml文件的脚本执行，注意分支名字，如果不对，该workflows不会执行。如果没有执行成功，点击github 仓库的actions按钮，然后找到具体的action，点开可以查看详细log记录。成功后仓库会多一个gh-pages分支。
+后续操作 这个时候访问eight.github.io，便可以看到自己的博客。 不同的模板需要的配置不一样，还需要稍微的微调。如果想自定义域名，点击github仓库的设置，找到pages，在custom domain填入自己的域名。有个先提条件，需要将域名cname到eight.github.io。
+Hugo自建博客总结 整个过程步骤不多，但是小细节很多。比较耗费时间的是下载主题总归会有需要修改的地方，这个比较耗费时间。还有应该着重在内容上，不要太纠结于一些界面上的瑕疵。一定要选择自己满意的编辑器，特别是修改layouts布局文件的时候，以及发布文章。否则会被一些格式上面的问题困扰。</content></entry></search>
