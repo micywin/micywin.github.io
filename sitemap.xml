@@ -1,4 +1,4 @@
-<search><entry><title>使用hugo在github上搭建独立博客</title><url>https://d-j.fun/post/notes/2022/0426_hugo_hosted_on_github/</url><categories><category>技术</category></categories><tags><tag>Github</tag><tag>Hugo</tag></tags><content type="html"> hugo golang编写的静态化网站构建工具，速度、灵活是两个标榜的特点。选择该工具的原因：有自己喜欢的模版、方便的自定义、快速的调试，最关键是可以git版本化管理内容，不用依托于mysql，这是最关键的原因。
+<search><entry><title>使用hugo在github上搭建独立博客</title><url>https://d-j.fun/post/technical/2022/0426_hugo_hosted_on_github/</url><categories><category>技术</category></categories><tags><tag>Github</tag><tag>Hugo</tag></tags><content type="html"> hugo golang编写的静态化网站构建工具，速度、灵活是两个标榜的特点。选择该工具的原因：有自己喜欢的模版、方便的自定义、快速的调试，最关键是可以git版本化管理内容，不用依托于mysql，这是最关键的原因。
 github pages更是提供了免费的托管，同时github actions提供自动化编译，搭配起来是完美。
 纵览搭建过程 Hugo 在本地初始化git仓库，在该仓库中搭建hugo环境，主要是选择自己喜欢的模板 Hugo 主题 。接下来比较耗费时间的是，根据自己需要修改模板：比如title、description，还有一些样式，很多没有定义在配置里，就需要自己在layouts中找到对应的文件进行修改，不过hugo的文件结构比较清晰，有过网站开发经验的很容易找到规律。
 Github 本地准备完毕后便可以将整个hugo环境推到github，然后利用github actions自动化构建，便完成基础搭建。 hugo官方提供的有github actions yml文件，可以根据自己需要改动。
