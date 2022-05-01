@@ -14,7 +14,20 @@ time_redirect指标 从上例子中可以看出，该指标是截止点在于跳
 time_starttransfer和time_total指标 这两个指标应该是比较好理解的。time_starttransfer 对应TTFB，即curl收到服务端传来的第一个字节的瞬间。time_total整个curl操作周期的总时间。
 指标应用 dns解析快慢，直接使用time_namelookup 链接创建时间，根据http\https, 使用time_connect\time_appconnect - 直接使用time_namelookup 服务端处理时间，time_starttransfer - time_pretransfer 内容下载时间，time_total - time_starttransfer 总结 curl的几个时间指标真实反应一次请求的各个阶段，对于服务时间性能方面的测试是一个很大的助力。关于本文，主要针对无法理解curl man的解释，做了各个方面的探究。这些探究都是针对实际操作而得出的结论，可能无法真实反应curl本身源代码方面的设计。
 不过针对平时的应用，参考&amp;lt;指标应用&amp;gt;小节，完全可以满足平时所用。如果针对某个具体的指标有疑问，可以深入到具体的指标实验中做对比。
-引用 https://speedtestdemon.com/a-guide-to-curls-performance-metrics-how-to-analyze-a-speed-test-result/</content></entry><entry><title>使用hugo在github上搭建独立博客</title><url>https://d-j.fun/post/technical/2022/0426_hugo_hosted_on_github/</url><categories><category>technical</category></categories><tags><tag>Github</tag><tag>Hugo</tag></tags><content type="html"> hugo golang编写的静态化网站构建工具，速度、灵活是两个标榜的特点。选择该工具的原因：有自己喜欢的模版、方便的自定义、快速的调试，最关键是可以git版本化管理内容，不用依托于mysql，这是最关键的原因。
+引用 https://speedtestdemon.com/a-guide-to-curls-performance-metrics-how-to-analyze-a-speed-test-result/</content></entry><entry><title>Github Pages最佳实践, 基于Github Actions</title><url>https://d-j.fun/post/notes/2022/0501_github_pages_best_practices/</url><categories><category>notes</category></categories><tags><tag>Github</tag></tags><content type="html"> 搭建本博客使用到的技术是hugo结合github page，详见hugo自建博客。博客中可以看到详细过程：将hugo写作环境推到github main分支，通过github action构建到gh-pages分支。这是目前见到的大部分方案，也有通过在其他仓库（gitee）将最终结果推送到github上的。
+最佳实践 个人觉得最佳的方案，应该隐藏写作环境，即hugo最终生成静态文件依赖的模板、md文件等。否则复制一个网站的成本就太小了，有心的人只需要下载你的写作环境，本地重新build以下，即可完全仿造你的整个流程。当然编译后的静态文件总归要暴露出去，但是后续更新、批量修改都增加了仿冒的成本。
+针对本博客的实现方案，最佳实践应该为 main分支隐藏，gh-pages分支继续保留。
+实现方案 构想过集中方案，可以根据自己情况实施：
+自己有服务器的，可使用的方案很多，写作环境保留在自己服务器即可，静态文件可以存放服务器，或者推送到github pages 建立两个Github仓库（注意创建顺序），写作环境保存在私有仓库，推送到另外一个公开仓库里面 类似2，不过写作环境放在自己搭建的仓库更安全，或者国内gitee、国外aws gitcommit 我选择第二种方案测试了一下
+创建私有仓库 由于Github 二级域名默认在账号级别创建的第一个仓库为根目录，具体实施应该为：
+静态文件推送到账号下第一个创建的仓库 写作环境推送到账号下除第一个创建仓库以外的仓库 我的做法：将第一个仓库的内容删除，然后本地git remote add origin 第二个仓库地址
+构建实现 peaceiris/actions-gh-pages 该该组件是编译好的静态文件推送到Github Pages，集成于Github Actions。详细见 hugo自建博客 Github Actions yaml文件。
+- name: Deploy # 部署 uses: peaceiris/actions-gh-pages@v3 with: personal_token: ${{ secrets.PERSONAL_TOKEN }} publish_dir: ./public cname: www.d-j.fun external_repository: micywin/hugo-dj 注意yaml和原文章的区别，由于原文章是将构建好的静态文件推送到当前仓库的gh-pages分支，直接使用Github Actions初始化的Github_TOKEN即可，但是如果跨仓库，甚至于不通的仓库提供商，那么这里就要设置为对应的token。由于博主使用的是github的另外一个仓库，使用personal_token即满足需求。
+按照上图设置好secrect之后，注意external_repository，这里是设置相对于当前仓库的另外一个仓库。
+这样设置好之后，重新推送一下写作环境的代码到第二个仓库，那么没有问题情况下，第一个仓库的gp-pages分支会出现最新一版的静态文件。
+拓展内容 关于peaceiris/actions-gh-pages该组件还有更多的配置选项，可以根据自己需要去配置，个人觉得比较有用的：
+设置full_commit_message, 让每次更新可以看到提交的相关信息 如果不想部署的时候影响到在线阅读体验，可以定时在半夜部署 等，可以根据自己情况去配置。博主的Deploy的完整配置：
+- name: Deploy uses: peaceiris/actions-gh-pages@v3 with: personal_token: ${{ secrets.PERSONAL_TOKEN }} publish_dir: ./public cname: www.d-j.fun external_repository: micywin/hugo-dj full_commit_message: ${{ github.event.head_commit.message }} 总结 为了写作体验，和后续可能的问题，应该提前做好各种规划。比如本文提到的写作环境隐藏、自动给图片添加水印、还有目录的规划、文章分类的划分等。</content></entry><entry><title>使用hugo在github上搭建独立博客</title><url>https://d-j.fun/post/technical/2022/0426_hugo_hosted_on_github/</url><categories><category>technical</category></categories><tags><tag>Github</tag><tag>Hugo</tag></tags><content type="html"> hugo golang编写的静态化网站构建工具，速度、灵活是两个标榜的特点。选择该工具的原因：有自己喜欢的模版、方便的自定义、快速的调试，最关键是可以git版本化管理内容，不用依托于mysql，这是最关键的原因。
 github pages更是提供了免费的托管，同时github actions提供自动化编译，搭配起来是完美。
 纵览搭建过程 Hugo 在本地初始化git仓库，在该仓库中搭建hugo环境，主要是选择自己喜欢的模板 Hugo 主题 。接下来比较耗费时间的是，根据自己需要修改模板：比如title、description，还有一些样式，很多没有定义在配置里，就需要自己在layouts中找到对应的文件进行修改，不过hugo的文件结构比较清晰，有过网站开发经验的很容易找到规律。
 Github 本地准备完毕后便可以将整个hugo环境推到github，然后利用github actions自动化构建，便完成基础搭建。 hugo官方提供的有github actions yml文件，可以根据自己需要改动。
