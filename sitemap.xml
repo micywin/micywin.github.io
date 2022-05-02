@@ -10,7 +10,9 @@ time_appconnect指标 真正的传输建立完socket便可以，比如http便是
 time_redirect指标 从上例子中可以看出，该指标是截止点在于跳转到b之前的瞬间。由于a文件在跳转之前先等待了2s，所以curl接收到301请求之后，由于-L（follow redirects），会立马请求b.php，但是b.php的返回是4s之后，所以该时间点，应该是接收到301之后，再次请求服务端的瞬间。
 这里就牵扯到一个问题：如果header location 是其他网站，是不是要重新计算namelookup的时间，以及建立链接的时间。
 // a.php &amp;lt;?php sleep(2); header(&amp;#34;location:https://www.baidu.com&amp;#34;); time_namelookup: 0.090075 time_connect: 0.158963 time_appconnect: 0.214078 time_redirect: 2.412030 time_pretransfer: 0.308881 time_starttransfer: 2.570669 ---------- time_total: 2.577325 可以看到time_namelookup、 time_connect、time_appconnect都有较大的变化，如果单独请求百度得到的三个值也会小于上面三个值。所以三个指标如果包含跳转，应该是跳转前后两次的对应加和。
+该指标指最后一个请求开始的瞬间，只考虑整个链条的最后一次请求。
 最困惑的time_pretransfer指标 从上面的例子可以发现该指标会比time_appconnect（https）或time_connect（http）多几十微秒，如果是跳转会多点，但是相对于网络来回来说，这个时间太小。所以有的文档说，该指标只是为了和connect概念上做区分。但是从细微的时间上的差别来看，足够cpu做很多事情，所以它表示的应该是，在connect之后处理了一些协议相关的初始化操作，然后将数据放到网卡之前的瞬间。
+通俗的说，该指标结束点在于开始往服务器发送真正的http、https请求的瞬间。
 time_starttransfer和time_total指标 这两个指标应该是比较好理解的。time_starttransfer 对应TTFB，即curl收到服务端传来的第一个字节的瞬间。time_total整个curl操作周期的总时间。
 指标应用 dns解析快慢，直接使用time_namelookup 链接创建时间，根据http\https, 使用time_connect\time_appconnect - 直接使用time_namelookup 服务端处理时间，time_starttransfer - time_pretransfer 内容下载时间，time_total - time_starttransfer 总结 curl的几个时间指标真实反应一次请求的各个阶段，对于服务时间性能方面的测试是一个很大的助力。关于本文，主要针对无法理解curl man的解释，做了各个方面的探究。这些探究都是针对实际操作而得出的结论，可能无法真实反应curl本身源代码方面的设计。
 不过针对平时的应用，参考&amp;lt;指标应用&amp;gt;小节，完全可以满足平时所用。如果针对某个具体的指标有疑问，可以深入到具体的指标实验中做对比。
