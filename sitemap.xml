@@ -5,7 +5,53 @@
 自我验证 &amp;lt;?php error_reporting(0); ini_set(&amp;#39;display_errors&amp;#39;, &amp;#39;off&amp;#39;); // set_error_handler 不能捕获致命错误 register_shutdown_function(function () { echo sprintf(&amp;#34;脚本结束时间%f\n&amp;#34;, microtime(true)); }); echo sprintf(&amp;#34;脚本开始时间%f\n&amp;#34;, microtime(true)); for($i=0;$i&amp;lt;100000000;$i++){ sha1(time()); } echo sprintf(&amp;#34;第一次循环结束时间%f\n&amp;#34;, microtime(true)); set_time_limit(10); $i = 0; while ($i &amp;lt;= 10) { echo &amp;#34;i=$i&amp;#34;; sleep(2); $i++; } $end = microtime(true); var_dump(getrusage()); echo sprintf(&amp;#34;\n第二次循环结束时间%f\n&amp;#34;, microtime(true)); while (true) { sha1(time()); } echo sprintf(&amp;#34;\n第三次循环结束时间%f\n&amp;#34;, microtime(true)); // output //脚本开始时间1651993104.293944 //第一次循环结束时间1651993191.067107 //i=0 i=1 i=2 i=3 i=4 i=5 i=6 i=7 i=8 i=9 i=10 //第二次循环结束时间1651993213.096094 //脚本结束时间1651993223.126825 第一次循环占用时间 86.77s (时间1) 第二次循环占用时间 22.02s (时间2) 第三次循环占用时间 10.03s (时间3) 脚本解析：
 时间1是在set_time_limit执行前的脚本执行时间，说明set_time_limit执行的时候，时间计数器从0重新计数 时间2是因为sleep了11次，每次2s。说明循环本身只是占用了0.02s 时间3是set_time_limit开始到脚本Fatal Error退出执行之间的时间。虽然第二次循环占用了22s，但是sleep不被计数。 设置真实执行时间 &amp;lt;?php echo sprintf(&amp;#34;脚本开始时间%f\n&amp;#34;, microtime(true)); pcntl_async_signals(1); pcntl_signal(SIGALRM, function () { echo sprintf(&amp;#34;脚本结束时间%f\n&amp;#34;, microtime(true)); exit(&amp;#39;Stop it!&amp;#39;); }); pcntl_alarm(3); $i = 0; while (true) { $i++; sha1(time()); echo &amp;#34;i = {$i}\n&amp;#34;; } echo sprintf(&amp;#34;脚本结束时间2%f\n&amp;#34;, microtime(true)); // output 脚本开始时间1651994735.305631 i=33万次... 脚本结束时间1651994738.307060 Stop it! 或者使用fork调用，父进程监控子进程运行。
 $pid=pcntl_fork(); if ($pid) { while (true) { shell_exec(&amp;#39;sleep 10&amp;amp;&amp;#39;); } } else { sleep(5); posix_kill(posix_getppid(),SIGKILL); } 如果是CLI脚本，有更多解决方案：
-timeout 5 /usr/bin/php -q /path/to/script 总结 不建议使用set_time_limit(0), 因为脚本会一直执行下去，影响服务器负载 脚本默认max_execution_time为0，即会一直执行下去，建议设置该配置，因为脚本会永久占用进程。 set_time_limit 会重置时间计数。比如在脚本已经运行20s的时候调用set_time_limit(10),那么脚本执行时间为30s。如果运行一个耗时任务的时候，一般放在脚本第一行。 sleep,file_get_contents,shell_exec,mysql_query这些函数包含在设置的时限内，所以这些函数本身执行时间应该自己考虑在内，不要让时间浪费在没必要的事情上。 set_time_limit 不能使用在安全模式下。set_time_limit() [function.set-time-limit]: Cannot set time limit in safe mode</content></entry><entry><title>使用jenkins pipeline部署Gcloud Function</title><url>https://d-j.fun/post/notes/2022/0506_jenkins_pipeline_deploy_gcloud_function/</url><categories><category>notes</category></categories><tags/><content type="html"> Google Cloud Function、aws lambda都是类似的无服务器服务，一种轻量级计算解决方案，通过相应平台封装的对应事件，返回响应。无需管理服务器、并且可以根据负载量自动扩缩容，这些特点特别方便我们一些高负载的需求。
+timeout 5 /usr/bin/php -q /path/to/script 总结 不建议使用set_time_limit(0), 因为脚本会一直执行下去，影响服务器负载 脚本默认max_execution_time为0，即会一直执行下去，建议设置该配置，因为脚本会永久占用进程。 set_time_limit 会重置时间计数。比如在脚本已经运行20s的时候调用set_time_limit(10),那么脚本执行时间为30s。如果运行一个耗时任务的时候，一般放在脚本第一行。 sleep,file_get_contents,shell_exec,mysql_query这些函数包含在设置的时限内，所以这些函数本身执行时间应该自己考虑在内，不要让时间浪费在没必要的事情上。 set_time_limit 不能使用在安全模式下。set_time_limit() [function.set-time-limit]: Cannot set time limit in safe mode</content></entry><entry><title>上海在《这个春天》郝景芳</title><url>https://d-j.fun/post/thoughts/2022/0508_this_spring/</url><categories><category>thoughts</category></categories><tags/><content type="html"> 被疫情阻隔的春天、岁月和一去不复返的过去、我们
+这个春天
+我们看见悲伤的形状
+悲伤被记忆炖煮
+在空寂的盘中释放清香
+这个春天
+花朵盛放
+寂寥的街景无人观赏
+花的命运与花椰菜一样
+因一道禁令，抵达不了人的欲望
+这个春天
+我们无比怀念远方
+我们微笑着回忆那年在路上
+星空下点篝火，闻林间青草香
+我们一直微笑着遐想
+在饥饿中遐想
+这个春天
+我们见到了死亡的模样
+哭声在窗外回荡
+刺在心上，堵住倾诉的愿望
+那粒灰尘什么时候落到自己头上
+物伤其类，目睹神伤
+生命随河水流淌
+岂知愤怒会不会被时间埋葬
+这个春天
+灵魂要压抑对自由的渴望
+良心要回避对正义的主张
+智能机器在寻访
+人类沟通在躲藏
+善良的人呈现出暴力倾向
+软弱的人承担抗争的坚强
+黑市肆意疯长
+人们拼死奔忙
+只想寻找活下去的方向
+这个春天
+有人撒谎
+有人刺破他人撒谎
+有人禁止刺破他人撒谎
+有人见证禁止刺破他人撒谎
+这个春天
+我们识得人生的方向
+只愿在饥饿时留一点善良
+在黑暗时留一点光
+那些在疲惫困顿中保持慈悲的人们啊
+我愿在远方的路上为你们歌唱
+愿大地记住你们的顽强
+愿风记住你们的悲伤</content></entry><entry><title>使用jenkins pipeline部署Gcloud Function</title><url>https://d-j.fun/post/notes/2022/0506_jenkins_pipeline_deploy_gcloud_function/</url><categories><category>notes</category></categories><tags/><content type="html"> Google Cloud Function、aws lambda都是类似的无服务器服务，一种轻量级计算解决方案，通过相应平台封装的对应事件，返回响应。无需管理服务器、并且可以根据负载量自动扩缩容，这些特点特别方便我们一些高负载的需求。
 但是代码部署方式上，和在服务器上自主搭建服务是有差别的：gcf接受Cloud Source Repositories（google的代码库平台）、zip文件；aws lambda 接受编译好的二进制文件的压缩包。不过aws 和 gcloud 都提供了强大的命令行工具，配合jenkins部署是一个不错的选择。由于gcloud、aws机制类似，本文以gcloud为例。
 Google Cloud Function 部署 代码载体选择 google cloud function支持四种：
 内嵌编辑器： 只适合一些简单的测试 zip文件上传：将zip打包比较适合jenkins，jenkins对shell脚本支持的比较好，但是gcloud命令没有看到接受文件上传的选项。 cloud storage上的zip：google cloud storage对应aws的s3，将代码压缩好上传到这里还可以备份，是比较好的选择 Cloud Source Repositories：考虑到一般公司都选择自建的gitlab仓库，需要做一层同步。 通过比较几种代码载体，第三种是适合博主的方式，具体选择哪种，视你的具体场景选择。
