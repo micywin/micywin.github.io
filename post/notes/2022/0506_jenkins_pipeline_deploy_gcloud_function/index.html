@@ -15,81 +15,90 @@
 <span>&nbsp; | &nbsp;
 <span class=post-meta-item-icon><i class="fa fa-eye"></i></span>
 <span class=post-meta-item-text>阅读：</span>
-<span class=leancloud-visitors-count>2036 字 ~5分钟</span></span></div></header><div class=post-body itemprop=articleBody><p>Google Cloud Function、aws lambda都是类似的无服务器服务，一种轻量级计算解决方案，通过相应平台封装的对应事件，返回响应。无需管理服务器、并且可以根据负载量自动扩缩容，这些特点特别方便我们一些高负载的需求。</p><p>但是代码部署方式上，和在服务器上自主搭建服务是有差别的：gcf接受Cloud Source Repositories（google的代码库平台）、zip文件；aws lambda 接受编译好的二进制文件的压缩包。不过aws 和 gcloud 都提供了强大的命令行工具，配合jenkins部署是一个不错的选择。由于gcloud、aws机制类似，本文以gcloud为例。</p><h2 id=google-cloud-function-部署>Google Cloud Function 部署</h2><h3 id=代码载体选择>代码载体选择</h3><p>google cloud function支持四种：</p><ul><li>内嵌编辑器： 只适合一些简单的测试</li><li>zip文件上传：将zip打包比较适合jenkins，jenkins对shell脚本支持的比较好，但是gcloud命令没有看到接受文件上传的选项。</li><li>cloud storage上的zip：google cloud storage对应aws的s3，将代码压缩好上传到这里还可以备份，是比较好的选择</li><li>Cloud Source Repositories：考虑到一般公司都选择自建的gitlab仓库，需要做一层同步。</li></ul><p>通过比较几种代码载体，第三种是适合博主的方式，具体选择哪种，视你的具体场景选择。</p><h3 id=gcloud-sdk安装>gcloud sdk安装</h3><p>安装教程见 <a href="https://cloud.google.com/sdk/docs/install?hl=zh-cn">Google CLi安装</a> 。一般服务器linux操作系统错不了，简单整理官方文档步骤如下:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span><span style=color:#75715e># 下载google cloud sdk压缩包</span>
+<span class=leancloud-visitors-count>2046 字 ~5分钟</span></span></div></header><div class=post-body itemprop=articleBody><p>Google Cloud Function、aws lambda都是类似的无服务器服务，一种轻量级计算解决方案，通过相应平台封装的对应事件，返回响应。无需管理服务器、并且可以根据负载量自动扩缩容，这些特点特别方便我们一些高负载的需求。</p><p>但是代码部署方式上，和在服务器上自主搭建服务是有差别的：gcf接受Cloud Source Repositories（google的代码库平台）、zip文件；aws lambda 接受编译好的二进制文件的压缩包。不过aws 和 gcloud 都提供了强大的命令行工具，配合jenkins部署是一个不错的选择。由于gcloud、aws机制类似，本文以gcloud为例。</p><h2 id=google-cloud-function-部署>Google Cloud Function 部署</h2><h3 id=代码载体选择>代码载体选择</h3><p>google cloud function支持四种：</p><ul><li>内嵌编辑器： 只适合一些简单的测试</li><li>zip文件上传：将zip打包比较适合jenkins，jenkins对shell脚本支持的比较好，但是gcloud命令没有看到接受文件上传的选项。</li><li>cloud storage上的zip：google cloud storage对应aws的s3，将代码压缩好上传到这里还可以备份，是比较好的选择</li><li>Cloud Source Repositories：考虑到一般公司都选择自建的gitlab仓库，需要做一层同步。</li></ul><p>通过比较几种代码载体，第三种是适合博主的方式，具体选择哪种，视你的具体场景选择。</p><h3 id=gcloud-sdk安装>gcloud sdk安装</h3><p>安装教程见 <a href="https://cloud.google.com/sdk/docs/install?hl=zh-cn">Google CLi安装</a> 。一般服务器linux操作系统错不了，简单整理官方文档步骤如下:</p><div class=highlight><div style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><table style=border-spacing:0;padding:0;margin:0;border:0><tr><td style=vertical-align:top;padding:0;margin:0;border:0><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code><span style="white-space:pre;user-select:none;margin-right:.4em;padding:0 .4em;color:#7f7f7f">1
+</span><span style="white-space:pre;user-select:none;margin-right:.4em;padding:0 .4em;color:#7f7f7f">2
+</span><span style="white-space:pre;user-select:none;margin-right:.4em;padding:0 .4em;color:#7f7f7f">3
+</span><span style="white-space:pre;user-select:none;margin-right:.4em;padding:0 .4em;color:#7f7f7f">4
+</span><span style="white-space:pre;user-select:none;margin-right:.4em;padding:0 .4em;color:#7f7f7f">5
+</span><span style="white-space:pre;user-select:none;margin-right:.4em;padding:0 .4em;color:#7f7f7f">6
+</span><span style="white-space:pre;user-select:none;margin-right:.4em;padding:0 .4em;color:#7f7f7f">7
+</span><span style="white-space:pre;user-select:none;margin-right:.4em;padding:0 .4em;color:#7f7f7f">8
+</span><span style="white-space:pre;user-select:none;margin-right:.4em;padding:0 .4em;color:#7f7f7f">9
+</span></code></pre></td><td style=vertical-align:top;padding:0;margin:0;border:0;width:100%><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span><span style=color:#09f;font-style:italic># 下载google cloud sdk压缩包</span>
 </span></span><span style=display:flex><span>curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-377.0.0-linux-x86_64.tar.gz
-</span></span><span style=display:flex><span><span style=color:#75715e># 解压</span>
+</span></span><span style=display:flex><span><span style=color:#09f;font-style:italic># 解压</span>
 </span></span><span style=display:flex><span>tar -xf google-cloud-sdk-377.0.0-linux-x86.tar.gz
-</span></span><span style=display:flex><span><span style=color:#75715e># 执行安装sh脚本</span>
+</span></span><span style=display:flex><span><span style=color:#09f;font-style:italic># 执行安装sh脚本</span>
 </span></span><span style=display:flex><span>./google-cloud-sdk/install.sh
-</span></span><span style=display:flex><span><span style=color:#75715e># 由于要把代码上传到cloud storage，用到alpha组件</span>
+</span></span><span style=display:flex><span><span style=color:#09f;font-style:italic># 由于要把代码上传到cloud storage，用到alpha组件</span>
 </span></span><span style=display:flex><span>gcloud components install beta
-</span></span><span style=display:flex><span><span style=color:#75715e>#接下来不要执行gcloud init，jenkins部署提供了secret file认证文件的管理，为了安全。</span>
-</span></span></code></pre></div><p>以上操作是在jenkins同台机器上执行。</p><h3 id=gcloud-sdk认证>gcloud sdk认证</h3><p>首先判断是否已认证：<code>gcloud auth list</code>。该命令会列出已认证的账号，以及活跃账号。
+</span></span><span style=display:flex><span><span style=color:#09f;font-style:italic>#接下来不要执行gcloud init，jenkins部署提供了secret file认证文件的管理，为了安全。</span>
+</span></span></code></pre></td></tr></table></div></div><p>以上操作是在jenkins同台机器上执行。</p><h3 id=gcloud-sdk认证>gcloud sdk认证</h3><p>首先判断是否已认证：<code>gcloud auth list</code>。该命令会列出已认证的账号，以及活跃账号。
 google iam提供了几种认证方式，因为要在jenkins pipeline里使用，最好选择<code>gcloud auth activate-service-account</code>。当然也可以选择直接在jenkins机器jenkins用户下直接执行gcloud init。
 即使<code>gcloud auth activate-service-account</code>该种方式认证，gcloud也会将私钥的副本存储在<code>$HOME/.config/gcloud</code>目录下面。如果要可靠的存储gcloud身份验证信息，在运行完pipeline之后，清楚一下本地缓存的密钥文件<code>rm -rf $HOME/.config/gcloud</code>。</p><p>另外建议创建权限足够但不多余的专门用户，服务于jenkins。权限请选择：<code>Cloud Functions Admin</code>、<code>Storage Admin</code>。
-<img src=https://d-j.fun/img/202205/gcp-add-secret-json-file.png alt="Google Cloud Platform 添加密钥"></p><h2 id=jenkins-pipeline部署>jenkins pipeline部署</h2><h3 id=pipeline介绍>pipeline介绍</h3><p>jenkins pipeline 流水线是用户定义的一个cd模型，通过代码定义项目的整个构建过程，支持各种组件，灵活而强大。类似的有github runner、bitbucket pipeline以及比较通用的github actions。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#ae81ff>pipeline { </span>
-</span></span><span style=display:flex><span>    <span style=color:#ae81ff>agent any </span>
-</span></span><span style=display:flex><span>    <span style=color:#ae81ff>stages {</span>
-</span></span><span style=display:flex><span>        <span style=color:#ae81ff>stage(&#39;Build&#39;) { </span>
-</span></span><span style=display:flex><span>            <span style=color:#ae81ff>steps { </span>
-</span></span><span style=display:flex><span>                <span style=color:#ae81ff>sh &#39;make&#39; </span>
-</span></span><span style=display:flex><span>            }
-</span></span><span style=display:flex><span>        }
-</span></span><span style=display:flex><span>        <span style=color:#ae81ff>stage(&#39;Test&#39;){</span>
-</span></span><span style=display:flex><span>            <span style=color:#ae81ff>steps {</span>
-</span></span><span style=display:flex><span>                <span style=color:#ae81ff>sh &#39;make check&#39;</span>
-</span></span><span style=display:flex><span>                <span style=color:#ae81ff>junit &#39;reports/**/*.xml&#39; </span>
-</span></span><span style=display:flex><span>            }
-</span></span><span style=display:flex><span>        }
-</span></span><span style=display:flex><span>        <span style=color:#ae81ff>stage(&#39;Deploy&#39;) {</span>
-</span></span><span style=display:flex><span>            <span style=color:#ae81ff>steps {</span>
-</span></span><span style=display:flex><span>                <span style=color:#ae81ff>sh &#39;make publish&#39;</span>
-</span></span><span style=display:flex><span>            }
-</span></span><span style=display:flex><span>        }
-</span></span><span style=display:flex><span>    }
-</span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>简单的语法定义将构建过程分成步骤stage，同时支持环境变量定义，同时jenkins还提供了pipeline-syntax片段生成器。详细参考<a href=https://www.jenkins.io/zh/doc/book/pipeline/>Jenkins Pipeline文档</a>。</p><h3 id=添加密钥文件>添加密钥文件</h3><p><img src=https://d-j.fun/img/202205/jenkins-add-credential.png alt=jenkins添加密钥文件>
-在jenkins系统管理-全局凭据中，添加密钥，选择 <code>secret file</code>。具体可参考 []</p><h2 id=jenkins-pipeline部署gcloud-function>jenkins pipeline部署Gcloud Function</h2><h3 id=pipeline示例>pipeline示例</h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#ae81ff>pipeline {</span>
-</span></span><span style=display:flex><span>    <span style=color:#ae81ff>agent any</span>
-</span></span><span style=display:flex><span>    <span style=color:#ae81ff>stages {</span>
-</span></span><span style=display:flex><span>        <span style=color:#ae81ff>stage(&#39;克隆&#39;) {</span>
-</span></span><span style=display:flex><span>         <span style=color:#ae81ff>when {</span>
-</span></span><span style=display:flex><span>            <span style=color:#ae81ff>branch &#39;main&#39;</span>
-</span></span><span style=display:flex><span>          }
-</span></span><span style=display:flex><span>          <span style=color:#ae81ff>steps {</span>
-</span></span><span style=display:flex><span>            <span style=color:#f92672>dir(path</span>: <span style=color:#e6db74>&#34;./&#34;</span><span style=color:#ae81ff>) {</span>
-</span></span><span style=display:flex><span>                <span style=color:#f92672>checkout([$class: &#39;GitSCM&#39;, branches: [[name: &#39;*/master&#39;]], doGenerateSubmoduleConfigurations: false, userRemoteConfigs: [[credentialsId</span>: <span style=color:#e6db74>&#34;仓库git凭证&#34;</span><span style=color:#f92672>, url</span>: <span style=color:#e6db74>&#39;仓库地址&#39;</span>]]]<span style=color:#ae81ff>)</span>
-</span></span><span style=display:flex><span>            }
-</span></span><span style=display:flex><span>        }
-</span></span><span style=display:flex><span>       }
-</span></span><span style=display:flex><span>        <span style=color:#ae81ff>stage(&#39;上线&#39;) {</span>
-</span></span><span style=display:flex><span>            <span style=color:#ae81ff>when {</span>
-</span></span><span style=display:flex><span>                <span style=color:#ae81ff>branch &#39;main&#39;</span>
-</span></span><span style=display:flex><span>            }
-</span></span><span style=display:flex><span>            <span style=color:#ae81ff>steps {</span>
-</span></span><span style=display:flex><span>              <span style=color:#f92672>withCredentials([file(credentialsId: &#39;gcloud secret file id&#39;, variable</span>: <span style=color:#e6db74>&#39;GCP_FILE&#39;</span><span style=color:#ae81ff>)]) {</span>
-</span></span><span style=display:flex><span>                    <span style=color:#ae81ff>sh &#39;git archive -o /tmp/code.zip HEAD&#39;                                                                    </span>
-</span></span><span style=display:flex><span>                    <span style=color:#ae81ff>sh &#34;gcloud auth activate-service-account 账户名称 --key-file=&#39;${GCP_FILE}&#39;&#34;</span>
-</span></span><span style=display:flex><span>                    <span style=color:#ae81ff>sh &#39;gcloud alpha storage cp /tmp/code.zip  gs地址&#39;</span>
-</span></span><span style=display:flex><span>                    <span style=color:#ae81ff>sh &#39;gcloud functions deploy 函数名 --source  gs地址&#39;</span>
-</span></span><span style=display:flex><span>                }
-</span></span><span style=display:flex><span>            }
-</span></span><span style=display:flex><span>        }
-</span></span><span style=display:flex><span>      
-</span></span><span style=display:flex><span>        <span style=color:#ae81ff>stage(&#39;测试&#39;) {</span>
-</span></span><span style=display:flex><span>            <span style=color:#ae81ff>steps {</span>
-</span></span><span style=display:flex><span>              <span style=color:#ae81ff>sh &#39;curl -vvv 链接&#39;</span>
-</span></span><span style=display:flex><span>            }
-</span></span><span style=display:flex><span>        }
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    }
-</span></span><span style=display:flex><span>            
-</span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>触发构建，可以根据自己需要设置，例子中是main分支有更新。还可以选择手工点击构建。</p><h3 id=可能遇到的问题>可能遇到的问题</h3><ul><li><code>gcloud sdk not found</code>类似问题：安装gcloud cli必须安装在jenkins所在机器</li><li><code>User does not have the 'iam.serviceAccounts.actAs' permission on *@appspot.gserviceaccount.com required to create the function. You can fix this by running gcloud iam service-accounts add-iam-policy-binding *@appspot.gserviceaccount.com --member=user: --role=roles/iam.serviceAccountUser"</code>,详见 <a href=https://cloud.google.com/functions/docs/troubleshooting#role-actAs>官方解释</a>
+<img src=https://d-j.fun/img/202205/gcp-add-secret-json-file.png alt="Google Cloud Platform 添加密钥"></p><h2 id=jenkins-pipeline部署>jenkins pipeline部署</h2><h3 id=pipeline介绍>pipeline介绍</h3><p>jenkins pipeline 流水线是用户定义的一个cd模型，通过代码定义项目的整个构建过程，支持各种组件，灵活而强大。类似的有github runner、bitbucket pipeline以及比较通用的github actions。</p><div class=highlight><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span>pipeline { <span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>    </span>agent any <span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>    </span>stages {<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>        </span>stage(&#39;Build&#39;) { <span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>            </span>steps { <span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>                </span>sh &#39;make&#39; <span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>            </span>}<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>        </span>}<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>        </span>stage(&#39;Test&#39;){<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>            </span>steps {<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>                </span>sh &#39;make check&#39;<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>                </span>junit &#39;reports/**/*.xml&#39; <span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>            </span>}<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>        </span>}<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>        </span>stage(&#39;Deploy&#39;) {<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>            </span>steps {<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>                </span>sh &#39;make publish&#39;<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>            </span>}<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>        </span>}<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>    </span>}<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb></span>}<span style=color:#bbb>
+</span></span></span></code></pre></div><p>简单的语法定义将构建过程分成步骤stage，同时支持环境变量定义，同时jenkins还提供了pipeline-syntax片段生成器。详细参考<a href=https://www.jenkins.io/zh/doc/book/pipeline/>Jenkins Pipeline文档</a>。</p><h3 id=添加密钥文件>添加密钥文件</h3><p><img src=https://d-j.fun/img/202205/jenkins-add-credential.png alt=jenkins添加密钥文件>
+在jenkins系统管理-全局凭据中，添加密钥，选择 <code>secret file</code>。具体可参考 []</p><h2 id=jenkins-pipeline部署gcloud-function>jenkins pipeline部署Gcloud Function</h2><h3 id=pipeline示例>pipeline示例</h3><div class=highlight><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span>pipeline {<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>    </span>agent any<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>    </span>stages {<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>        </span>stage(&#39;克隆&#39;) {<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>         </span>when {<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>            </span>branch &#39;main&#39;<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>          </span>}<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>          </span>steps {<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>            </span><span style=color:#309;font-weight:700>dir(path</span>:<span style=color:#bbb> </span><span style=color:#c30>&#34;./&#34;</span>) {<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>                </span><span style=color:#309;font-weight:700>checkout([$class: &#39;GitSCM&#39;, branches: [[name: &#39;*/master&#39;]], doGenerateSubmoduleConfigurations: false, userRemoteConfigs: [[credentialsId</span>:<span style=color:#bbb> </span><span style=color:#c30>&#34;仓库git凭证&#34;</span><span style=color:#309;font-weight:700>, url</span>:<span style=color:#bbb> </span><span style=color:#c30>&#39;仓库地址&#39;</span>]]])<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>            </span>}<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>        </span>}<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>       </span>}<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>        </span>stage(&#39;上线&#39;) {<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>            </span>when {<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>                </span>branch &#39;main&#39;<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>            </span>}<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>            </span>steps {<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>              </span><span style=color:#309;font-weight:700>withCredentials([file(credentialsId: &#39;gcloud secret file id&#39;, variable</span>:<span style=color:#bbb> </span><span style=color:#c30>&#39;GCP_FILE&#39;</span>)]) {<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>                    </span>sh &#39;git archive -o /tmp/code.zip HEAD&#39;                                                                    <span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>                    </span>sh &#34;gcloud auth activate-service-account 账户名称 --key-file=&#39;${GCP_FILE}&#39;&#34;<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>                    </span>sh &#39;gcloud alpha storage cp /tmp/code.zip  gs地址&#39;<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>                    </span>sh &#39;gcloud functions deploy 函数名 --source  gs地址&#39;<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>                </span>}<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>            </span>}<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>        </span>}<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>      
+</span></span></span><span style=display:flex><span><span style=color:#bbb>        </span>stage(&#39;测试&#39;) {<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>            </span>steps {<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>              </span>sh &#39;curl -vvv 链接&#39;<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>            </span>}<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>        </span>}<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>    </span>}<span style=color:#bbb>
+</span></span></span><span style=display:flex><span><span style=color:#bbb>            
+</span></span></span><span style=display:flex><span><span style=color:#bbb></span>}<span style=color:#bbb>
+</span></span></span></code></pre></div><p>触发构建，可以根据自己需要设置，例子中是main分支有更新。还可以选择手工点击构建。</p><h3 id=可能遇到的问题>可能遇到的问题</h3><ul><li><code>gcloud sdk not found</code>类似问题：安装gcloud cli必须安装在jenkins所在机器</li><li><code>User does not have the 'iam.serviceAccounts.actAs' permission on *@appspot.gserviceaccount.com required to create the function. You can fix this by running gcloud iam service-accounts add-iam-policy-binding *@appspot.gserviceaccount.com --member=user: --role=roles/iam.serviceAccountUser"</code>,详见 <a href=https://cloud.google.com/functions/docs/troubleshooting#role-actAs>官方解释</a>
 ：是因为创建用户和部署用户不同，解决办法为 <code>gcloud iam service-accounts add-iam-policy-binding 创建function用户 --member=serviceAccount:serviceaccount用户 --role=roles/iam.serviceAccountUser</code></li></ul><h2 id=总结>总结</h2><p>jenkins pipeline是一个简单而又强大的cd工具，可以从平时复杂冗余的工作中解放出来。由于对shell及jenkins本身强大的插件机制，可扩展的地方很多，本文只是拿一个具体的任务举例。目前比较可惜的是pipeline类似的功能都是在具体的平台上，没有一个更宽泛的概念，期待。。。</p><h2 id=引用>引用</h2><p><a href=https://cloud.google.com/sdk/gcloud/reference/functions/deploy>https://cloud.google.com/sdk/gcloud/reference/functions/deploy</a> gcloud sdk function文档
-<a href=https://tech.ray247k.com/blog/202204-jenkins-cicd-3-push-docker-image-to-gcr/>https://tech.ray247k.com/blog/202204-jenkins-cicd-3-push-docker-image-to-gcr/</a> Jenkins 打包 Docker image 並推送到 GCR</p></div><footer class=post-footer><div class=post-nav><div class="post-nav-next post-nav-item"></div><div class="post-nav-prev post-nav-item"><a href=https://d-j.fun/post/notes/2022/0501_benchmark_server_latency_with_curl/ rel=prev title="curl 关于服务时间性能的指标探究及应用">curl 关于服务时间性能的指标探究及应用 <i class="fa fa-chevron-right"></i></a></div></div><div id=vcomments></div></footer></article></section></div></div><div class=sidebar-toggle><div class=sidebar-toggle-line-wrap><span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+<a href=https://tech.ray247k.com/blog/202204-jenkins-cicd-3-push-docker-image-to-gcr/>https://tech.ray247k.com/blog/202204-jenkins-cicd-3-push-docker-image-to-gcr/</a> Jenkins 打包 Docker image 並推送到 GCR</p></div><footer class=post-footer><div class=post-nav><div class="post-nav-next post-nav-item"><a href=https://d-j.fun/post/notes/2022/0508_php_set_time_out_not_work/ rel=next title="php set_time_limit函数不起作用原因解析"><i class="fa fa-chevron-left"></i> php set_time_limit函数不起作用原因解析</a></div><div class="post-nav-prev post-nav-item"><a href=https://d-j.fun/post/notes/2022/0501_benchmark_server_latency_with_curl/ rel=prev title="curl 关于服务时间性能的指标探究及应用">curl 关于服务时间性能的指标探究及应用 <i class="fa fa-chevron-right"></i></a></div></div><div id=vcomments></div></footer></article></section></div></div><div class=sidebar-toggle><div class=sidebar-toggle-line-wrap><span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
 <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
-<span class="sidebar-toggle-line sidebar-toggle-line-last"></span></div></div><aside id=sidebar class=sidebar><div class=sidebar-inner><ul class="sidebar-nav motion-element"><li class="sidebar-nav-toc sidebar-nav-active" data-target=post-toc-wrap>文章目录</li><li class=sidebar-nav-overview data-target=site-overview>站点概览</li></ul><section class="site-overview sidebar-panel"><div class="site-author motion-element" itemprop=author itemscope itemtype=http://schema.org/Person><img class=site-author-image itemprop=image src=https://d-j.fun/img/logo.png alt=D&J><p class=site-author-name itemprop=name>D&J</p><p class="site-description motion-element" itemprop=description>程序员</p></div><nav class="site-state motion-element"><div class="site-state-item site-state-posts"><a href=https://d-j.fun/post/><span class=site-state-item-count>4</span>
+<span class="sidebar-toggle-line sidebar-toggle-line-last"></span></div></div><aside id=sidebar class=sidebar><div class=sidebar-inner><ul class="sidebar-nav motion-element"><li class="sidebar-nav-toc sidebar-nav-active" data-target=post-toc-wrap>文章目录</li><li class=sidebar-nav-overview data-target=site-overview>站点概览</li></ul><section class="site-overview sidebar-panel"><div class="site-author motion-element" itemprop=author itemscope itemtype=http://schema.org/Person><img class=site-author-image itemprop=image src=https://d-j.fun/img/logo.png alt=D&J><p class=site-author-name itemprop=name>D&J</p><p class="site-description motion-element" itemprop=description>程序员</p></div><nav class="site-state motion-element"><div class="site-state-item site-state-posts"><a href=https://d-j.fun/post/><span class=site-state-item-count>5</span>
 <span class=site-state-item-name>日志</span></a></div><div class="site-state-item site-state-categories"><a href=https://d-j.fun/categories/><span class=site-state-item-count>2</span>
 <span class=site-state-item-name>分类</span></a></div><div class="site-state-item site-state-tags"><a href=https://d-j.fun/tags/><span class=site-state-item-count>3</span>
 <span class=site-state-item-name>标签</span></a></div></nav><div class="links-of-author motion-element"><span class=links-of-author-item><a href=https://github.com/micywin target=_blank title=GitHub><i class="fa fa-fw fa-github"></i>

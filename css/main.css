@@ -2647,3 +2647,14 @@ body {
     text-align: justify;
   }
 }
+
+/* 不带行号的代码块 */
+.highlight>pre {
+  padding: 10px;  /* 适当留出边距 */
+  overflow: auto; /* 代码行太长向右滚动 */
+}
+
+.highlight{
+  /* 统一行高，让行号和代码能对齐 */
+  line-height: 18px;
+}

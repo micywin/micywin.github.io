@@ -1,0 +1,129 @@
+<!doctype html><html lang=zh-cn><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge,chrome=1"><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1"><title>php set_time_limit函数不起作用原因解析 - 吃不上鱼的dj猫</title><meta name=keywords content="set_time_limit,php脚本执行时间,php脚本最大执行时间,php超时配置,"><meta property="og:title" content="php set_time_limit函数不起作用原因解析"><meta property="og:site_name" content="吃不上鱼的dj猫"><meta property="og:image" content="/img/logo.jpg"><meta name=title content="php set_time_limit函数不起作用原因解析 - 吃不上鱼的dj猫"><meta name=description content="php set_time_limit函数不起作用|set_time_limit需要注意的地方|set_time_limit详解"><link rel="shortcut icon" href=https://d-j.fun/img/favicon.ico><link rel=apple-touch-icon href=https://d-j.fun/img/apple-touch-icon.png><link rel=apple-touch-icon-precomposed href=https://d-j.fun/img/apple-touch-icon.png><link href="https://d-j.fun/js/vendor/font-awesome/css/font-awesome.min.css?v=4.6.2" rel=stylesheet type=text/css><link href="https://d-j.fun/js/vendor/fancybox/jquery.fancybox.css?v=2.1.5" rel=stylesheet type=text/css><link href=https://d-j.fun/css/main.css rel=stylesheet type=text/css><link href=https://d-j.fun/css/syntax.css rel=stylesheet type=text/css><script type=text/javascript id=hexo.configuration>var NexT=window.NexT||{},CONFIG={scheme:"Pisces",sidebar:{position:"left",display:"post"},fancybox:!0,motion:!0}</script><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9395958650601631" crossorigin=anonymous></script></head><body itemscope itemtype=http://schema.org/WebPage lang=zh-hans><div class="container one-collumn sidebar-position-left page-home"><div class=headband></div><header id=header class=header itemscope itemtype=http://schema.org/WPHeader><div class=header-inner><div class="site-meta custom-logo"><div class=custom-logo-site-title><a href=https://d-j.fun/ class=brand rel=start><span class=logo-line-before><i></i></span>
+<span class=site-title>吃不上鱼的dj猫</span>
+<span class=logo-line-after><i></i></span></a></div><p class=site-subtitle>明月如镜 高悬草原映照千年岁月</p></div><div class=site-nav-toggle><button>
+<span class=btn-bar></span>
+<span class=btn-bar></span>
+<span class=btn-bar></span></button></div><nav class=site-nav><ul id=menu class=menu><li class=menu-item><a href=https://d-j.fun/ rel=section><i class="menu-item-icon fa fa-fw fa-home"></i><br>首页</a></li><li class=menu-item><a href=https://d-j.fun/categories/technical/ rel=section><i class="menu-item-icon fa fa-fw fa-code"></i><br>技术</a></li><li class=menu-item><a href=https://d-j.fun/categories/notes/ rel=section><i class="menu-item-icon fa fa-fw fa-book"></i><br>笔记</a></li><li class=menu-item><a href=https://d-j.fun/post/ rel=section><i class="menu-item-icon fa fa-fw fa-archive"></i><br>归档</a></li><li class=menu-item><a href=https://d-j.fun/about/ rel=section><i class="menu-item-icon fa fa-fw fa-user"></i><br>关于</a></li><li class="menu-item menu-item-search"><a href=javascript:; class=popup-trigger><i class="menu-item-icon fa fa-search fa-fw"></i><br>搜索</a></li></ul><div class=site-search><div class=popup><span class="search-icon fa fa-search"></span>
+<input type=text id=local-search-input><div id=local-search-result></div><span class=popup-btn-close>close</span></div></div></nav></div></header><main id=main class=main><div class=main-inner><div class=content-wrap><div id=content class=content><section id=posts class=posts-expand><article class="post post-type-normal" itemscope itemtype=http://schema.org/Article><header class=post-header><h1 class=post-title itemprop="name headline"><a class=post-title-link href=https://d-j.fun/post/notes/2022/0508_php_set_time_out_not_work/ itemprop=url>php set_time_limit函数不起作用原因解析</a></h1><div class=post-meta><span class=post-time><span class=post-meta-item-icon><i class="fa fa-calendar-o"></i></span>
+<span class=post-meta-item-text>时间：</span>
+<time itemprop=dateCreated datetime=2016-03-22T13:04:35+08:00 content="2022-05-08">2022-05-08</time></span>
+<span class=post-category>&nbsp; | &nbsp;
+<span class=post-meta-item-icon><i class="fa fa-folder-o"></i></span>
+<span class=post-meta-item-text>分类：</span>
+<span itemprop=about itemscope itemtype=https://schema.org/Thing><a href=https://d-j.fun/categories/notes itemprop=url rel=index><span itemprop=name>notes</span></a>
+&nbsp;</span></span>
+<span>&nbsp; | &nbsp;
+<span class=post-meta-item-icon><i class="fa fa-eye"></i></span>
+<span class=post-meta-item-text>阅读：</span>
+<span class=leancloud-visitors-count>1613 字 ~4分钟</span></span></div></header><div class=post-body itemprop=articleBody><p>作为phper这么多年，很多时间都花在业务、框架上，反而一些细节不经意的就抽自己一巴掌。本文解析set_time_limit配置，以及相关细节。也记录一下此次掉坑经历，给自己以后指一个方向。</p><h2 id=起因>起因</h2><p>服务器某个接口相应时间长达100s，而且报nginx 502错误。检查发现php max_execution_time使用的默认值30s。错误分析：<code>502 gateway错误</code>，可以定位到是php脚本处理太慢造成的。但是让人怀疑的是为什么30s脚本不停止。</p><h2 id=解析>解析</h2><h3 id=官方解释>官方解释</h3><div class=highlight><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-text data-lang=text><span style=display:flex><span>The set_time_limit() function and the configuration directive max_execution_time only affect the execution time of the script itself. Any time spent on activity that happens outside the execution of the script such as system calls using system(), stream operations, database queries, etc. is not included when determining the maximum time that the script has been running. This is not true on Windows where the measured time is real.
+</span></span></code></pre></div><p>翻阅官方文档得到答案：该配置项仅仅代表脚本本身的执行时间，而不包括系统调用、流操作、数据库查询所占用的时间（即不计算 sleep,file_get_contents,shell_exec,mysql_query等花费的时间）。</p><p>起因中提到的问题就找到原因了：脚本本身查询mysql耗费了太久时间，导致达到nginx <code>proxy_read_timeout 100</code>时间限制。nginx在发现proxy即fpm没有在规定时间内返回结果，就直接返回调用方502错误。</p><h3 id=自我验证>自我验证</h3><div class=highlight><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>&lt;?php
+</span></span><span style=display:flex><span>    error_reporting<span style=color:#555>(</span>0<span style=color:#555>)</span>;
+</span></span><span style=display:flex><span>    ini_set<span style=color:#555>(</span><span style=color:#c30>&#39;display_errors&#39;</span>, <span style=color:#c30>&#39;off&#39;</span><span style=color:#555>)</span>;
+</span></span><span style=display:flex><span>    // set_error_handler 不能捕获致命错误
+</span></span><span style=display:flex><span>    register_shutdown_function<span style=color:#555>(</span><span style=color:#069;font-weight:700>function</span> <span style=color:#555>()</span> <span style=color:#555>{</span>
+</span></span><span style=display:flex><span>        <span style=color:#366>echo</span> sprintf<span style=color:#555>(</span><span style=color:#c30>&#34;脚本结束时间%f\n&#34;</span>, microtime<span style=color:#555>(</span><span style=color:#366>true</span><span style=color:#555>))</span>;
+</span></span><span style=display:flex><span>    <span style=color:#555>})</span>;
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>    <span style=color:#366>echo</span> sprintf<span style=color:#555>(</span><span style=color:#c30>&#34;脚本开始时间%f\n&#34;</span>, microtime<span style=color:#555>(</span><span style=color:#366>true</span><span style=color:#555>))</span>;
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>    <span style=color:#069;font-weight:700>for</span><span style=color:#555>(</span><span style=color:#033>$i</span><span style=color:#555>=</span>0;<span style=color:#033>$i</span>&lt;100000000;<span style=color:#033>$i</span>++<span style=color:#555>){</span>
+</span></span><span style=display:flex><span>        sha1<span style=color:#555>(</span>time<span style=color:#555>())</span>;
+</span></span><span style=display:flex><span>    <span style=color:#555>}</span>
+</span></span><span style=display:flex><span>    <span style=color:#366>echo</span> sprintf<span style=color:#555>(</span><span style=color:#c30>&#34;第一次循环结束时间%f\n&#34;</span>, microtime<span style=color:#555>(</span><span style=color:#366>true</span><span style=color:#555>))</span>;
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>    set_time_limit<span style=color:#555>(</span>10<span style=color:#555>)</span>;
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>    <span style=color:#033>$i</span> <span style=color:#555>=</span> 0;
+</span></span><span style=display:flex><span>    <span style=color:#069;font-weight:700>while</span> <span style=color:#555>(</span><span style=color:#033>$i</span> &lt;<span style=color:#555>=</span> 10<span style=color:#555>)</span> <span style=color:#555>{</span>
+</span></span><span style=display:flex><span>        <span style=color:#366>echo</span> <span style=color:#c30>&#34;i=</span><span style=color:#033>$i</span><span style=color:#c30> &#34;</span>;
+</span></span><span style=display:flex><span>        sleep<span style=color:#555>(</span>2<span style=color:#555>)</span>;
+</span></span><span style=display:flex><span>        <span style=color:#033>$i</span>++;
+</span></span><span style=display:flex><span>    <span style=color:#555>}</span>
+</span></span><span style=display:flex><span>    <span style=color:#033>$end</span> <span style=color:#555>=</span> microtime<span style=color:#555>(</span><span style=color:#366>true</span><span style=color:#555>)</span>;
+</span></span><span style=display:flex><span>    var_dump<span style=color:#555>(</span>getrusage<span style=color:#555>())</span>;
+</span></span><span style=display:flex><span>    <span style=color:#366>echo</span> sprintf<span style=color:#555>(</span><span style=color:#c30>&#34;\n第二次循环结束时间%f\n&#34;</span>, microtime<span style=color:#555>(</span><span style=color:#366>true</span><span style=color:#555>))</span>;
+</span></span><span style=display:flex><span>    <span style=color:#069;font-weight:700>while</span> <span style=color:#555>(</span><span style=color:#366>true</span><span style=color:#555>)</span> <span style=color:#555>{</span>
+</span></span><span style=display:flex><span>        sha1<span style=color:#555>(</span>time<span style=color:#555>())</span>;
+</span></span><span style=display:flex><span>    <span style=color:#555>}</span>
+</span></span><span style=display:flex><span>    <span style=color:#366>echo</span> sprintf<span style=color:#555>(</span><span style=color:#c30>&#34;\n第三次循环结束时间%f\n&#34;</span>, microtime<span style=color:#555>(</span><span style=color:#366>true</span><span style=color:#555>))</span>;
+</span></span><span style=display:flex><span>// output
+</span></span><span style=display:flex><span>//脚本开始时间1651993104.293944
+</span></span><span style=display:flex><span>//第一次循环结束时间1651993191.067107
+</span></span><span style=display:flex><span>//i<span style=color:#555>=</span><span style=color:#f60>0</span> <span style=color:#033>i</span><span style=color:#555>=</span><span style=color:#f60>1</span> <span style=color:#033>i</span><span style=color:#555>=</span><span style=color:#f60>2</span> <span style=color:#033>i</span><span style=color:#555>=</span><span style=color:#f60>3</span> <span style=color:#033>i</span><span style=color:#555>=</span><span style=color:#f60>4</span> <span style=color:#033>i</span><span style=color:#555>=</span><span style=color:#f60>5</span> <span style=color:#033>i</span><span style=color:#555>=</span><span style=color:#f60>6</span> <span style=color:#033>i</span><span style=color:#555>=</span><span style=color:#f60>7</span> <span style=color:#033>i</span><span style=color:#555>=</span><span style=color:#f60>8</span> <span style=color:#033>i</span><span style=color:#555>=</span><span style=color:#f60>9</span> <span style=color:#033>i</span><span style=color:#555>=</span><span style=color:#f60>10</span> 
+</span></span><span style=display:flex><span>//第二次循环结束时间1651993213.096094
+</span></span><span style=display:flex><span>//脚本结束时间1651993223.126825
+</span></span></code></pre></div><ul><li>第一次循环占用时间 86.77s (时间1)</li><li>第二次循环占用时间 22.02s (时间2)</li><li>第三次循环占用时间 10.03s (时间3)</li></ul><p>脚本解析：</p><ul><li>时间1是在set_time_limit执行前的脚本执行时间，说明set_time_limit执行的时候，时间计数器从0重新计数</li><li>时间2是因为sleep了11次，每次2s。说明循环本身只是占用了0.02s</li><li>时间3是set_time_limit开始到脚本Fatal Error退出执行之间的时间。虽然第二次循环占用了22s，但是sleep不被计数。</li></ul><h3 id=设置真实执行时间>设置真实执行时间</h3><div class=highlight><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>&lt;?php
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#366>echo</span> sprintf<span style=color:#555>(</span><span style=color:#c30>&#34;脚本开始时间%f\n&#34;</span>, microtime<span style=color:#555>(</span><span style=color:#366>true</span><span style=color:#555>))</span>;
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>    pcntl_async_signals<span style=color:#555>(</span>1<span style=color:#555>)</span>;
+</span></span><span style=display:flex><span>    pcntl_signal<span style=color:#555>(</span>SIGALRM, <span style=color:#069;font-weight:700>function</span> <span style=color:#555>()</span> <span style=color:#555>{</span>
+</span></span><span style=display:flex><span>        <span style=color:#366>echo</span> sprintf<span style=color:#555>(</span><span style=color:#c30>&#34;脚本结束时间%f\n&#34;</span>, microtime<span style=color:#555>(</span><span style=color:#366>true</span><span style=color:#555>))</span>;
+</span></span><span style=display:flex><span>        exit<span style=color:#555>(</span><span style=color:#c30>&#39;Stop it!&#39;</span><span style=color:#555>)</span>;
+</span></span><span style=display:flex><span>    <span style=color:#555>})</span>;
+</span></span><span style=display:flex><span>    pcntl_alarm<span style=color:#555>(</span>3<span style=color:#555>)</span>;
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>    <span style=color:#033>$i</span> <span style=color:#555>=</span> 0;
+</span></span><span style=display:flex><span>    <span style=color:#069;font-weight:700>while</span> <span style=color:#555>(</span><span style=color:#366>true</span><span style=color:#555>)</span> <span style=color:#555>{</span>
+</span></span><span style=display:flex><span>        <span style=color:#033>$i</span>++;
+</span></span><span style=display:flex><span>        sha1<span style=color:#555>(</span>time<span style=color:#555>())</span>;
+</span></span><span style=display:flex><span>        <span style=color:#366>echo</span> <span style=color:#c30>&#34;i = {</span><span style=color:#033>$i</span><span style=color:#c30>}\n&#34;</span>;
+</span></span><span style=display:flex><span>    <span style=color:#555>}</span>
+</span></span><span style=display:flex><span>    <span style=color:#366>echo</span> sprintf<span style=color:#555>(</span><span style=color:#c30>&#34;脚本结束时间2%f\n&#34;</span>, microtime<span style=color:#555>(</span><span style=color:#366>true</span><span style=color:#555>))</span>;
+</span></span><span style=display:flex><span>// output
+</span></span><span style=display:flex><span>脚本开始时间1651994735.305631
+</span></span><span style=display:flex><span><span style=color:#033>i</span><span style=color:#555>=</span>33万次...
+</span></span><span style=display:flex><span>脚本结束时间1651994738.307060
+</span></span><span style=display:flex><span>Stop it!
+</span></span></code></pre></div><p>或者使用fork调用，父进程监控子进程运行。</p><div class=highlight><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span><span style=color:#033>$pid</span><span style=color:#555>=</span>pcntl_fork<span style=color:#555>()</span>;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#069;font-weight:700>if</span> <span style=color:#555>(</span><span style=color:#033>$pid</span><span style=color:#555>)</span> <span style=color:#555>{</span>
+</span></span><span style=display:flex><span>  <span style=color:#069;font-weight:700>while</span> <span style=color:#555>(</span><span style=color:#366>true</span><span style=color:#555>)</span> <span style=color:#555>{</span>
+</span></span><span style=display:flex><span>    shell_exec<span style=color:#555>(</span><span style=color:#c30>&#39;sleep 10&amp;&#39;</span><span style=color:#555>)</span>;
+</span></span><span style=display:flex><span>  <span style=color:#555>}</span>
+</span></span><span style=display:flex><span><span style=color:#555>}</span> <span style=color:#069;font-weight:700>else</span> <span style=color:#555>{</span>
+</span></span><span style=display:flex><span>  sleep<span style=color:#555>(</span>5<span style=color:#555>)</span>;
+</span></span><span style=display:flex><span>  posix_kill<span style=color:#555>(</span>posix_getppid<span style=color:#555>()</span>,SIGKILL<span style=color:#555>)</span>;
+</span></span><span style=display:flex><span><span style=color:#555>}</span>
+</span></span></code></pre></div><p>如果是CLI脚本，有更多解决方案：</p><div class=highlight><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>timeout <span style=color:#f60>5</span> /usr/bin/php -q /path/to/script
+</span></span></code></pre></div><h2 id=总结>总结</h2><ul><li>不建议使用set_time_limit(0), 因为脚本会一直执行下去，影响服务器负载</li><li>脚本默认max_execution_time为0，即会一直执行下去，建议设置该配置，因为脚本会永久占用进程。</li><li>set_time_limit 会重置时间计数。比如在脚本已经运行20s的时候调用set_time_limit(10),那么脚本执行时间为30s。如果运行一个耗时任务的时候，一般放在脚本第一行。</li><li>sleep,file_get_contents,shell_exec,mysql_query这些函数包含在设置的时限内，所以这些函数本身执行时间应该自己考虑在内，不要让时间浪费在没必要的事情上。</li><li>set_time_limit 不能使用在安全模式下。<code>set_time_limit() [function.set-time-limit]: Cannot set time limit in safe mode</code></li></ul></div><footer class=post-footer><div class=post-nav><div class="post-nav-next post-nav-item"></div><div class="post-nav-prev post-nav-item"><a href=https://d-j.fun/post/notes/2022/0506_jenkins_pipeline_deploy_gcloud_function/ rel=prev title="使用jenkins pipeline部署Gcloud Function">使用jenkins pipeline部署Gcloud Function <i class="fa fa-chevron-right"></i></a></div></div><div id=vcomments></div></footer></article></section></div></div><div class=sidebar-toggle><div class=sidebar-toggle-line-wrap><span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+<span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+<span class="sidebar-toggle-line sidebar-toggle-line-last"></span></div></div><aside id=sidebar class=sidebar><div class=sidebar-inner><ul class="sidebar-nav motion-element"><li class="sidebar-nav-toc sidebar-nav-active" data-target=post-toc-wrap>文章目录</li><li class=sidebar-nav-overview data-target=site-overview>站点概览</li></ul><section class="site-overview sidebar-panel"><div class="site-author motion-element" itemprop=author itemscope itemtype=http://schema.org/Person><img class=site-author-image itemprop=image src=https://d-j.fun/img/logo.png alt=D&J><p class=site-author-name itemprop=name>D&J</p><p class="site-description motion-element" itemprop=description>程序员</p></div><nav class="site-state motion-element"><div class="site-state-item site-state-posts"><a href=https://d-j.fun/post/><span class=site-state-item-count>5</span>
+<span class=site-state-item-name>日志</span></a></div><div class="site-state-item site-state-categories"><a href=https://d-j.fun/categories/><span class=site-state-item-count>2</span>
+<span class=site-state-item-name>分类</span></a></div><div class="site-state-item site-state-tags"><a href=https://d-j.fun/tags/><span class=site-state-item-count>3</span>
+<span class=site-state-item-name>标签</span></a></div></nav><div class="links-of-author motion-element"><span class=links-of-author-item><a href=https://github.com/micywin target=_blank title=GitHub><i class="fa fa-fw fa-github"></i>
+GitHub</a></span></div></section><section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active"><div class=post-toc><div class=post-toc-content><nav id=TableOfContents><ul><li><a href=#起因>起因</a></li><li><a href=#解析>解析</a><ul><li><a href=#官方解释>官方解释</a></li><li><a href=#自我验证>自我验证</a></li><li><a href=#设置真实执行时间>设置真实执行时间</a></li></ul></li><li><a href=#总结>总结</a></li></ul></nav></div></div></section></div></aside></div></main><footer id=footer class=footer><div class=footer-inner><div class=copyright><span itemprop=copyrightYear>&copy;
+2009 - 2022</span>
+<span class=with-love><i class="fa fa-heart"></i></span>
+<span class=author itemprop=copyrightHolder>吃不上鱼的dj猫</span></div><div class=powered-by>Powered by - <a class=theme-link href=http://gohugo.io target=_blank title=hugo>Hugo v0.98.0</a></div><div class=theme-info>Theme by - <a class=theme-link href=https://github.com/micywin/micywin.github.io target=_blank>NexT</a></div></div></footer><div class=back-to-top><i class="fa fa-arrow-up"></i>
+<span id=scrollpercent><span>0</span>%</span></div></div><script>var _hmt=_hmt||[];(function(){var e,t=document.createElement("script");t.src="//hm.baidu.com/hm.js?d99271cdde903024e3e5c6bee73674ca",e=document.getElementsByTagName("script")[0],e.parentNode.insertBefore(t,e)})()</script><script type=text/javascript>Object.prototype.toString.call(window.Promise)!=="[object Function]"&&(window.Promise=null)</script><script type=text/javascript src="https://d-j.fun/js/vendor/jquery/index.js?v=2.1.3"></script>
+<script type=text/javascript src="https://d-j.fun/js/vendor/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+<script type=text/javascript src="https://d-j.fun/js/vendor/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+<script type=text/javascript src="https://d-j.fun/js/vendor/velocity/velocity.min.js?v=1.2.1"></script>
+<script type=text/javascript src="https://d-j.fun/js/vendor/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="https://d-j.fun/js/vendor/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+<script src="https://d-j.fun/js/vendor/fancybox/jquery.fancybox.pack.js?v=2.1.5"></script>
+<script type=text/javascript src=https://d-j.fun/js/utils.js></script>
+<script type=text/javascript src=https://d-j.fun/js/motion.js></script>
+<script type=text/javascript src=https://d-j.fun/js/affix.js></script>
+<script type=text/javascript src=https://d-j.fun/js/schemes/pisces.js></script>
+<script type=text/javascript src=https://d-j.fun/js/scrollspy.js></script>
+<script type=text/javascript src=https://d-j.fun/js/post-details.js></script>
+<script type=text/javascript src=https://d-j.fun/js/toc.js></script>
+<script type=text/javascript src=https://d-j.fun/js/bootstrap.js></script>
+<script type=text/javascript src=https://d-j.fun/js/search.js></script>
+<script type=text/x-mathjax-config>
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX", "output/HTML-CSS"],
+    tex2jax: {
+      inlineMath: [ ['$','$'] ],
+      displayMath: [ ['$$','$$'] ],
+      processEscapes: true
+    },
+    "HTML-CSS": { fonts: ["TeX"] }
+  });
+</script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async></script>
+<script src=//unpkg.com/valine/dist/Valine.min.js></script>
+<script type=text/javascript>new Valine({el:"#vcomments",appId:"OHRSTedbIkBw8vMft7nXrSD6-gzGzoHsz",appKey:"qSWgGIqVOpJ10tsWsNJEI9I7",visitor:!0,placeholder:" 欢迎留下您的宝贵建议，请填写您的昵称和邮箱便于后续交流. ^_^ ",requiredFields:["nick","mail"],lang:"zh"})</script></body></html>
