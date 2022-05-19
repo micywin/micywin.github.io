@@ -1,4 +1,18 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><search><entry><title>xdebug3调试原理分析及配置迁移</title><url>https://d-j.fun/post/technical/2022/0515_how_to_debug_with_xdebug3_and_mechanism/</url><categories><category>technical</category></categories><tags/><content type="html"> xdebug3相对于2，配置方式修改了很多，在配置的时候会给出相应提示。本文使用较大篇幅分析xdebug的调试原理，以及简单的调试。针对结合PHPSTROM进行php调试也有简单涉及。
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><search><entry><title>如何使用openssl加密大文件</title><url>https://d-j.fun/post/technical/2022/0518_how_to_encrypt_large_file_openssl/</url><categories><category>technical</category></categories><tags><tag>Linux命令</tag></tags><content type="html"> 强大的openssl命令 openssl，一个linux命令，囊括了主要的密码算法、常用的密钥和证书封装管理功能，提供丰富应用程序测试等。只要涉及到加密、hash、证书等相关的需求，都可以使用openssl进行解决。
+本文涉及到的相关只是，只是服务于本文 加密较大文件方案，只涉及到openssl的应用的很小一部分：
+openssl enc 执行对称加密算法。具体支持的算法通过openssl enc -h命令查看。其中in &amp;amp; out参数分别代表输入和输出。当然也接受标准输出管道作为参数。e &amp;amp; d参数分别代表加密、解密。 openssl genpkey 生成私钥，algorithm指定具体的算法 openssl rsautl执行非对称加密 加密文件 生成大文件 mkfile -n 1g test.txt ### -rw------- 1 eight staff 1.0G May 19 01:19 test.txt 使用命令生成一个1g的大文件，用来观察加密效果、以及测试加密大文件的性能。
+echo &amp;#34;\n观察加密效果，这是机密数据&amp;#34; &amp;gt;&amp;gt; test.txt 加密算法的选择 对称加密算法AES（Advanced Encryption Standard）支持128、192、256字节的密钥。AES使用简单的代数运算，使用相同的方式加密每block的数据。这种特质更适合加密大文件。但正是它的简单，造成在抗暴力破解方面，不如RSA。
+非对称加密，使用一对key来加解密电子信息。RSA (Rivest–Shamir–Adleman)是我们经常使用的非对称加密，经常用于ssl、ssh等领域。它机密每block都使用不同的方式，比其他机密更安全。但是也造成在加密较大文件的时候，性能方面不理想。
+结合AES和RSA 生成一个keyfile，作为AES加密的密钥文件。
+openssl rand 256 &amp;gt; pwd.key AES加密test.txt，完成不到5s。
+&amp;gt;&amp;gt; time openssl enc -in test.txt -out test.txt.enc -e -aes256 -k pwd.key openssl enc -in test.txt -out test.txt.enc -e -aes256 -k pwd.key 1.37s user 1.74s system 79% cpu 3.918 total AES解密test.txt.enc, 完成不到3s
+&amp;gt;&amp;gt; time openssl enc -in test.txt.enc -out test.txt.decrypt -d -aes256 -k pwd.key openssl enc -in test.txt.enc -out test.txt.decrypt -d -aes256 -k pwd.key 0.51s user 1.99s system 72% cpu 3.434 total RSA相关操作
+生成私钥openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:2048 对应公钥openssl rsa -pubout -in private_key.pem -out public_key.pem 加密密钥文件
+openssl rsautl -encrypt -inkey public_key.pem -pubin -in pwd.key -out pwd.key.enc 解密密钥文件
+openssl rsautl -decrypt -inkey private_key.pem -in pwd.key.enc -out pwd.key 总结 AES适合机密大文件、RSA加密方法安全。总体思路：使用RSA加密密钥文件，然后使用AES结合密钥文件加密大文件。
+这样相结合大文件，首先需要RSA加密时候对应的密钥对的另一个，解开密钥文件，然后使用密钥文件再解开AES。其实仔细分析ssl协议会发现，使用了类似的方案。
+总体方案：
+生成公私钥 生成密钥文件 RSA加密密钥文件 AES加密大文件</content></entry><entry><title>xdebug3调试原理分析及配置迁移</title><url>https://d-j.fun/post/technical/2022/0515_how_to_debug_with_xdebug3_and_mechanism/</url><categories><category>technical</category></categories><tags/><content type="html"> xdebug3相对于2，配置方式修改了很多，在配置的时候会给出相应提示。本文使用较大篇幅分析xdebug的调试原理，以及简单的调试。针对结合PHPSTROM进行php调试也有简单涉及。
 xdebug3常用配置迁移 开启方式，不再是0，1的简单设置，而是使用mode来指定xdebug处于什么模式。方便于xdebug只是加载实际需要的特性。
 xdebug.mode=debug # 开启Step Debugging # 其他值off 关闭，develop 开启开发辅助，coverage 开启代码覆盖率分析，gcstats 开启垃圾收集状态统计， profile 开启分析，trace 开启函数追踪特性。 # 可以使用 xdebug_info() 查看配置 激活命令行调试export XDEBUG_CONFIG=idekey=yourname 替换为 export XDEBUG_SESSION=xdebug_is_great
 自动开启调试xdebug.remote_autostart 替换为 xdebug.start_with_request
