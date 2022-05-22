@@ -1,0 +1,131 @@
+<!doctype html><html lang=zh-cn><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge,chrome=1"><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1"><title>基于presto-go-client分析database/sql - 吃不上鱼的dj猫</title><meta name=keywords content="presto-go-client库,golang库,database/sql源码,"><meta property="og:title" content="基于presto-go-client分析database/sql"><meta property="og:site_name" content="吃不上鱼的dj猫"><meta property="og:image" content="/img/logo.jpg"><meta name=title content="基于presto-go-client分析database/sql - 吃不上鱼的dj猫"><meta name=description content="presto-go-client库|分析database/sql源码|github贡献代码"><link rel="shortcut icon" href=https://d-j.fun/img/favicon.ico><link rel=apple-touch-icon href=https://d-j.fun/img/apple-touch-icon.png><link rel=apple-touch-icon-precomposed href=https://d-j.fun/img/apple-touch-icon.png><link href="https://d-j.fun/js/vendor/font-awesome/css/font-awesome.min.css?v=4.6.2" rel=stylesheet type=text/css><link href="https://d-j.fun/js/vendor/fancybox/jquery.fancybox.css?v=2.1.5" rel=stylesheet type=text/css><link href=https://d-j.fun/css/main.css rel=stylesheet type=text/css><link href=https://d-j.fun/css/syntax.css rel=stylesheet type=text/css><script type=text/javascript id=hexo.configuration>var NexT=window.NexT||{},CONFIG={scheme:"Pisces",sidebar:{position:"left",display:"post"},fancybox:!0,motion:!0}</script><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9395958650601631" crossorigin=anonymous></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-LQW2Z0FT15"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date),gtag("config","G-LQW2Z0FT15")</script></head><body itemscope itemtype=http://schema.org/WebPage lang=zh-hans><div class="container one-collumn sidebar-position-left page-home"><div class=headband></div><header id=header class=header itemscope itemtype=http://schema.org/WPHeader><div class=header-inner><div class="site-meta custom-logo"><div class=custom-logo-site-title><a href=https://d-j.fun/ class=brand rel=start><span class=logo-line-before><i></i></span>
+<span class=site-title>吃不上鱼的dj猫</span>
+<span class=logo-line-after><i></i></span></a></div><p class=site-subtitle>明月如镜 高悬草原映照千年岁月</p></div><div class=site-nav-toggle><button>
+<span class=btn-bar></span>
+<span class=btn-bar></span>
+<span class=btn-bar></span></button></div><nav class=site-nav><ul id=menu class=menu><li class=menu-item><a href=https://d-j.fun/ rel=section><i class="menu-item-icon fa fa-fw fa-home"></i><br>首页</a></li><li class=menu-item><a href=https://d-j.fun/categories/technical/ rel=section><i class="menu-item-icon fa fa-fw fa-code"></i><br>技术</a></li><li class=menu-item><a href=https://d-j.fun/categories/thoughts/ rel=section><i class="menu-item-icon fa fa-fw fa-tint"></i><br>感想</a></li><li class=menu-item><a href=https://d-j.fun/categories/notes/ rel=section><i class="menu-item-icon fa fa-fw fa-book"></i><br>笔记</a></li><li class=menu-item><a href=https://d-j.fun/post/ rel=section><i class="menu-item-icon fa fa-fw fa-archive"></i><br>归档</a></li><li class=menu-item><a href=https://d-j.fun/about/ rel=section><i class="menu-item-icon fa fa-fw fa-user"></i><br>关于</a></li><li class="menu-item menu-item-search"><a href=javascript:; class=popup-trigger><i class="menu-item-icon fa fa-search fa-fw"></i><br>搜索</a></li></ul><div class=site-search><div class=popup><span class="search-icon fa fa-search"></span>
+<input type=text id=local-search-input><div id=local-search-result></div><span class=popup-btn-close>close</span></div></div></nav></div></header><main id=main class=main><div class=main-inner><div class=content-wrap><div id=content class=content><section id=posts class=posts-expand><article class="post post-type-normal" itemscope itemtype=http://schema.org/Article><header class=post-header><h1 class=post-title itemprop="name headline"><a class=post-title-link href=https://d-j.fun/post/notes/2022/0522_analyze_database_sql_based_on_presto_go_client/ itemprop=url>基于presto-go-client分析database/sql</a></h1><div class=post-meta><span class=post-time><span class=post-meta-item-icon><i class="fa fa-calendar-o"></i></span>
+<span class=post-meta-item-text>时间：</span>
+<time itemprop=dateCreated datetime=2016-03-22T13:04:35+08:00 content="2022-05-22">2022-05-22</time></span>
+<span class=post-category>&nbsp; | &nbsp;
+<span class=post-meta-item-icon><i class="fa fa-folder-o"></i></span>
+<span class=post-meta-item-text>分类：</span>
+<span itemprop=about itemscope itemtype=https://schema.org/Thing><a href=https://d-j.fun/categories/notes itemprop=url rel=index><span itemprop=name>notes</span></a>
+&nbsp;</span></span>
+<span>&nbsp; | &nbsp;
+<span class=post-meta-item-icon><i class="fa fa-eye"></i></span>
+<span class=post-meta-item-text>阅读：</span>
+<span class=leancloud-visitors-count>2411 字 ~5分钟</span></span></div></header><div class=post-body itemprop=articleBody><p><a href=https://github.com/prestodb/presto-go-client>presto-go-client</a> 是一个golang的Presto客户端，基于golang database/sql通用接口实现，方便开发者快速方便使用。这也是定义接口协议的意义体现。</p><h2 id=使用>使用</h2><div class=highlight><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span>    db, err <span style=color:#555>:=</span> sql.<span style=color:#c0f>Open</span>(<span style=color:#c30>&#34;presto&#34;</span>, <span style=color:#c30>&#34;http://localhost:9&#34;</span>)
+</span></span><span style=display:flex><span>	<span style=color:#069;font-weight:700>if</span> err <span style=color:#555>!=</span> <span style=color:#069;font-weight:700>nil</span> {
+</span></span><span style=display:flex><span>		t.<span style=color:#c0f>Fatal</span>(err)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>	<span style=color:#069;font-weight:700>defer</span> db.<span style=color:#c0f>Close</span>()
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	rows, err <span style=color:#555>:=</span> db.<span style=color:#c0f>Query</span>(<span style=color:#c30>&#34;select 1 &#34;</span>, sql.<span style=color:#c0f>Named</span>(<span style=color:#c30>&#34;X-Presto-User&#34;</span>, <span style=color:#c30>&#34;root&#34;</span>))
+</span></span><span style=display:flex><span>	<span style=color:#069;font-weight:700>if</span> err <span style=color:#555>!=</span> <span style=color:#069;font-weight:700>nil</span> {
+</span></span><span style=display:flex><span>		t.<span style=color:#c0f>Fatal</span>(err)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#069;font-weight:700>var</span> testId <span style=color:#078;font-weight:700>string</span>
+</span></span><span style=display:flex><span>	<span style=color:#069;font-weight:700>for</span> rows.<span style=color:#c0f>Next</span>() {
+</span></span><span style=display:flex><span>		err <span style=color:#555>:=</span> rows.<span style=color:#c0f>Scan</span>(<span style=color:#555>&amp;</span>testId)
+</span></span><span style=display:flex><span>		<span style=color:#069;font-weight:700>if</span> err <span style=color:#555>!=</span> <span style=color:#069;font-weight:700>nil</span> {
+</span></span><span style=display:flex><span>			t.<span style=color:#c0f>Fatal</span>(err)
+</span></span><span style=display:flex><span>		}
+</span></span><span style=display:flex><span>	}
+</span></span></code></pre></div><p>由于实现了database/sql通用数据库操作接口，使用方式和其他数据库一样。</p><h2 id=presto实现>presto实现</h2><h3 id=注册driver>注册Driver</h3><div class=highlight><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span>sql.<span style=color:#c0f>Register</span>(<span style=color:#c30>&#34;presto&#34;</span>, <span style=color:#555>&amp;</span>sqldriver{})
+</span></span></code></pre></div><p>规范操作</p><h3 id=sqlopen>sql.Open</h3><p>初始化DB Struct：
+OpenDB不验证参数，但是不真正创建和数据库的链接。数据库链接的建立时机是在第一次真正需要建立的时候。</p><ul><li>保存Connector：链接器，保存链接的信息，以及driver（这里是指presto，即实现了driver.Driver接口的结构体）指针</li><li>初始化openerCh：开启器channel，是一个默认1000000长度的struct{} chan</li><li>链接请求记录map初始化</li><li>可取消context初始化</li></ul><p>sql.DB不是数据库链接，而是数据库的一种虚拟，它可以做很重要的任务：打开关闭链接；链接池管理。实现并发访问数据存储的功能。</p><p>sql.DB被设计为持久存在的，不要频繁的开启和关闭。通用的方案是为每一个数据库创建一个全局、或者方便传递的对象，保持对象存在，直到程序结束。</p><h3 id=创建链接>创建链接</h3><p>链接建立是在query函数<code>db.query</code>调用的时候， <code>db.conn</code>完成这些操作：</p><ul><li>判断数据库是否关闭（db.closed）, DB的Close函数，会赋值该开关为true</li><li>检测context是否Done，如果Done会返回<code>ctx.Err()</code>，这里也是QueryContext中context的实现</li><li>取<code>db.freeConn</code>中的最后一个链接，或者调用<code>db.connector.Connect</code>重新创建一个或多个(给openerCh传递信号)</li></ul><p>链接池是一个管理空间链接，给请求复用链接的机制。database/sql的实现：
+当某个goroutine需要链接的时候，先查看空间链接数组是否有可用，如果有，直接返回；如果没有，则需要判断当前开启的链接数是否达到最大值，如果是阻塞goroutine。否则创建一个链接。</p><p>链接池相关操作对应函数：</p><ul><li>DB.conn：获取链接</li><li>driverConn.releaseConn：调用DB.PutConn释放连接</li><li>DB.PutConn：进行一些处理，调用DB.putConnDBLocked。</li><li>DB.putConnDBLocked：丢弃连接、返回连接给等待的协程或放到空闲队列。</li><li>DB.maybeOpenNewConnections：根据目前的连接请求数量和目前还能打开的连接数量判断是否发送创建连接信号给协程connectionOpener。</li><li>DB.connectionOpener：负责异步创建连接。</li></ul><p>presto真正意义上的链接建立就在这一步，由于presto是一个http client，所以建立链接的过程很简单，只需要初始化以及验证即可：</p><ul><li>解析dsn</li><li>kerberos检测</li><li>增加了custom_client的支持</li><li>初始化http headers</li></ul><div class=highlight><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span>c <span style=color:#555>:=</span> <span style=color:#555>&amp;</span>Conn{
+</span></span><span style=display:flex><span>		baseURL:         prestoURL.Scheme <span style=color:#555>+</span> <span style=color:#c30>&#34;://&#34;</span> <span style=color:#555>+</span> prestoURL.Host,
+</span></span><span style=display:flex><span>		httpClient:      <span style=color:#555>*</span>httpClient,
+</span></span><span style=display:flex><span>		httpHeaders:     <span style=color:#366>make</span>(http.Header),
+</span></span><span style=display:flex><span>		kerberosClient:  kerberosClient,
+</span></span><span style=display:flex><span>		kerberosEnabled: kerberosEnabled,
+</span></span><span style=display:flex><span>	}
+</span></span></code></pre></div><h3 id=查询执行>查询执行</h3><p>查询执行对应函数：</p><ul><li>QueryContext 接受sql、参数，获取数据库链接，调用Driver的对应方法查询数据</li><li>Query是QueryContext不支持context的版本</li><li>Exec 修改数据，注意如果不关心返回结果，推荐使用Exec，因为Query会保留数据库链接，直到sql.Rows关闭。可能存在维度数据，导致链接不被释放。</li></ul><div class=highlight><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span>    <span style=color:#069;font-weight:700>var</span> testId <span style=color:#078;font-weight:700>string</span>
+</span></span><span style=display:flex><span>	<span style=color:#069;font-weight:700>for</span> rows.<span style=color:#c0f>Next</span>() {
+</span></span><span style=display:flex><span>		err <span style=color:#555>:=</span> rows.<span style=color:#c0f>Scan</span>(<span style=color:#555>&amp;</span>testId)
+</span></span><span style=display:flex><span>		<span style=color:#069;font-weight:700>if</span> err <span style=color:#555>!=</span> <span style=color:#069;font-weight:700>nil</span> {
+</span></span><span style=display:flex><span>			t.<span style=color:#c0f>Fatal</span>(err)
+</span></span><span style=display:flex><span>		}
+</span></span><span style=display:flex><span>	}
+</span></span></code></pre></div><p>Presto在这里的实现，又可以被借鉴的地方。它利用NamedArgs来设置http headers。</p><ul><li>检查args是否有特定的参数，设置header</li><li>发送post请求给/v1/statement</li><li>解析为driverRows</li><li>如果nextUri非空，迭代rows.fetch，直到获取到最后的数据</li></ul><div class=highlight><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span>POST http:<span style=color:#09f;font-style:italic>//127.0.0.1:8081/v1/statement
+</span></span></span><span style=display:flex><span><span style=color:#09f;font-style:italic></span>Host: <span style=color:#f60>127.0.0.1</span>:<span style=color:#f60>8081</span>
+</span></span><span style=display:flex><span>User<span style=color:#555>-</span>Agent: Go<span style=color:#555>-</span>http<span style=color:#555>-</span>client<span style=color:#555>/</span><span style=color:#f60>1.1</span>
+</span></span><span style=display:flex><span>X<span style=color:#555>-</span>Presto<span style=color:#555>-</span>Catalog: hive
+</span></span><span style=display:flex><span>X<span style=color:#555>-</span>Presto<span style=color:#555>-</span>User: test
+</span></span><span style=display:flex><span>Accept<span style=color:#555>-</span>Encoding: gzip
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#069;font-weight:700>select</span> <span style=color:#f60>1</span>
+</span></span></code></pre></div><h2 id=next--scan>next && scan</h2><h3 id=next>next</h3><p>next函数结果指示下一行是否可用：true 可用，false 数据集耗尽(io.EOF)，或者中间出现错误。
+注意 rows的关闭这个时候是调用房的责任，当rows开启状态的时候， 数据库链接是忙碌状态。如果忘记close，或者rows存在时间较长，是可能出现链接泄漏的情况的。</p><div class=highlight><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#069;font-weight:700>func</span> (qr <span style=color:#555>*</span>driverRows) <span style=color:#c0f>Next</span>(dest []driver.Value) <span style=color:#078;font-weight:700>error</span> {
+</span></span><span style=display:flex><span>	<span style=color:#09f;font-style:italic>// ...
+</span></span></span><span style=display:flex><span><span style=color:#09f;font-style:italic></span>	<span style=color:#069;font-weight:700>if</span> qr.columns <span style=color:#555>==</span> <span style=color:#069;font-weight:700>nil</span> <span style=color:#555>||</span> qr.rowindex <span style=color:#555>&gt;=</span> <span style=color:#366>len</span>(qr.data) {
+</span></span><span style=display:flex><span>		<span style=color:#069;font-weight:700>if</span> qr.nextURI <span style=color:#555>==</span> <span style=color:#c30>&#34;&#34;</span> {
+</span></span><span style=display:flex><span>			qr.err = io.EOF
+</span></span><span style=display:flex><span>			<span style=color:#069;font-weight:700>return</span> qr.err
+</span></span><span style=display:flex><span>		}
+</span></span><span style=display:flex><span>		<span style=color:#069;font-weight:700>if</span> err <span style=color:#555>:=</span> qr.<span style=color:#c0f>fetch</span>(<span style=color:#069;font-weight:700>true</span>); err <span style=color:#555>!=</span> <span style=color:#069;font-weight:700>nil</span> {
+</span></span><span style=display:flex><span>			<span style=color:#069;font-weight:700>return</span> err
+</span></span><span style=display:flex><span>		}
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>    <span style=color:#09f;font-style:italic>// ...
+</span></span></span><span style=display:flex><span><span style=color:#09f;font-style:italic></span>	<span style=color:#069;font-weight:700>for</span> i, v <span style=color:#555>:=</span> <span style=color:#069;font-weight:700>range</span> qr.coltype {
+</span></span><span style=display:flex><span>		vv, err <span style=color:#555>:=</span> v.<span style=color:#c0f>ConvertValue</span>(qr.data[qr.rowindex][i])
+</span></span><span style=display:flex><span>	    <span style=color:#09f;font-style:italic>// ...
+</span></span></span><span style=display:flex><span><span style=color:#09f;font-style:italic></span>		dest[i] = vv
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>	qr.rowindex<span style=color:#555>++</span>
+</span></span><span style=display:flex><span>	<span style=color:#069;font-weight:700>return</span> <span style=color:#069;font-weight:700>nil</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>以上是presto的next实现:</p><ul><li>columns如果为初始化为nil，代表没有数据或执行错误</li><li>rowindex大于等于时机的数据：nextUri不为空代表有后续数据，调用fetch继续请求</li><li>正常情况挨个转化数据到dest，提供给scan使用</li></ul><h3 id=scan>scan</h3><div class=highlight><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span>    <span style=color:#069;font-weight:700>for</span> i, sv <span style=color:#555>:=</span> <span style=color:#069;font-weight:700>range</span> rs.lastcols {
+</span></span><span style=display:flex><span>		err <span style=color:#555>:=</span> <span style=color:#c0f>convertAssignRows</span>(dest[i], sv, rs)
+</span></span><span style=display:flex><span>		<span style=color:#069;font-weight:700>if</span> err <span style=color:#555>!=</span> <span style=color:#069;font-weight:700>nil</span> {
+</span></span><span style=display:flex><span>			<span style=color:#069;font-weight:700>return</span> fmt.<span style=color:#c0f>Errorf</span>(<span style=color:#c30>`sql: Scan error on column index %d, name %q: %w`</span>, i, rs.rowsi.<span style=color:#c0f>Columns</span>()[i], err)
+</span></span><span style=display:flex><span>		}
+</span></span><span style=display:flex><span>	}
+</span></span></code></pre></div><p>注意lastcols，就是next的参数dest。scan辅助你对结果的操作，帮你自己转换变量，迭代数据集的每一行。</p><div class=highlight><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#09f;font-style:italic>// 仅需一行代码
+</span></span></span><span style=display:flex><span><span style=color:#09f;font-style:italic></span>err = db.<span style=color:#c0f>QueryRow</span>(<span style=color:#c30>&#34;select name from users where id = ?&#34;</span>, <span style=color:#f60>1</span>).<span style=color:#c0f>Scan</span>(<span style=color:#555>&amp;</span>name)
+</span></span></code></pre></div><h2 id=driver的意义>Driver的意义</h2><p>Driver是真正执行任务的代码，像presto-go-client，所有和presto链接建立、数据解析等操作都由该库完成。而database/sql，定义了整个数据库操作流程，以及所有相关的结构定义。presto-go-client只需要按照定义实现出来，即可以被使用。</p><p>这样的设计，使你使用多种数据库（对应多个driver），却是相同的代码，相同的流程。也方便初次使用某个数据库的时候，能够快速接入。也方便driver开发者，无需关心管理上的细节，只需要实现就好。</p><p>但是也限制了自己任务发挥的能力，有得也有失。像presto提供的是一个http协议的接口，参数、验证信息都是依赖http协议，一些附加信息也无法突破next/scan操作的限制。</p><blockquote><p><a href=https://prestodb.io/docs/current/overview.html>presto文档</a></p><p><a href=https://blog.zhenlanghuo.top/2019/06/05/Golang%20databasesql%E4%B8%8Ego-sql-drivermysql%20%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0%20--%20databasesql%E7%AF%87/#Rows-Next-amp-Rows-NextResultSet-amp-Rows-Scan-amp-Rows-Close>Golang database/sql与go-sql-driver源码阅读笔记</a></p><p><a href=https://betterprogramming.pub/how-to-work-with-sql-in-go-ca8bc0b30722>database/sql工作机制</a></p></blockquote></div><footer class=post-footer><div class=post-nav><div class="post-nav-next post-nav-item"></div><div class="post-nav-prev post-nav-item"><a href=https://d-j.fun/post/technical/2022/0518_how_to_encrypt_large_file_openssl/ rel=prev title=如何使用openssl加密大文件>如何使用openssl加密大文件 <i class="fa fa-chevron-right"></i></a></div></div><div id=vcomments></div></footer></article></section></div></div><div class=sidebar-toggle><div class=sidebar-toggle-line-wrap><span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+<span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+<span class="sidebar-toggle-line sidebar-toggle-line-last"></span></div></div><aside id=sidebar class=sidebar><div class=sidebar-inner><ul class="sidebar-nav motion-element"><li class="sidebar-nav-toc sidebar-nav-active" data-target=post-toc-wrap>文章目录</li><li class=sidebar-nav-overview data-target=site-overview>站点概览</li></ul><section class="site-overview sidebar-panel"><div class="site-author motion-element" itemprop=author itemscope itemtype=http://schema.org/Person><img class=site-author-image itemprop=image src=https://d-j.fun/img/logo.png alt=D&J><p class=site-author-name itemprop=name>D&J</p><p class="site-description motion-element" itemprop=description>程序员</p></div><nav class="site-state motion-element"><div class="site-state-item site-state-posts"><a href=https://d-j.fun/post/><span class=site-state-item-count>10</span>
+<span class=site-state-item-name>日志</span></a></div><div class="site-state-item site-state-categories"><a href=https://d-j.fun/categories/><span class=site-state-item-count>3</span>
+<span class=site-state-item-name>分类</span></a></div><div class="site-state-item site-state-tags"><a href=https://d-j.fun/tags/><span class=site-state-item-count>4</span>
+<span class=site-state-item-name>标签</span></a></div></nav><div class="links-of-author motion-element"><span class=links-of-author-item><a href=https://github.com/micywin target=_blank title=GitHub><i class="fa fa-fw fa-github"></i>
+GitHub</a></span></div></section><section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active"><div class=post-toc><div class=post-toc-content><nav id=TableOfContents><ul><li><a href=#使用>使用</a></li><li><a href=#presto实现>presto实现</a><ul><li><a href=#注册driver>注册Driver</a></li><li><a href=#sqlopen>sql.Open</a></li><li><a href=#创建链接>创建链接</a></li><li><a href=#查询执行>查询执行</a></li></ul></li><li><a href=#next--scan>next && scan</a><ul><li><a href=#next>next</a></li><li><a href=#scan>scan</a></li></ul></li><li><a href=#driver的意义>Driver的意义</a></li></ul></nav></div></div></section></div></aside></div></main><footer id=footer class=footer><div class=footer-inner><div class=copyright><span itemprop=copyrightYear>&copy;
+2009 - 2022</span>
+<span class=with-love><i class="fa fa-heart"></i></span>
+<span class=author itemprop=copyrightHolder>吃不上鱼的dj猫</span></div><div class=powered-by>Powered by - <a class=theme-link href=http://gohugo.io target=_blank title=hugo>Hugo v0.99.1</a></div><div class=theme-info>Theme by - <a class=theme-link href=https://github.com/micywin/micywin.github.io target=_blank>NexT</a></div></div></footer><div class=back-to-top><i class="fa fa-arrow-up"></i>
+<span id=scrollpercent><span>0</span>%</span></div></div><script>var _hmt=_hmt||[];(function(){var e,t=document.createElement("script");t.src="//hm.baidu.com/hm.js?d99271cdde903024e3e5c6bee73674ca",e=document.getElementsByTagName("script")[0],e.parentNode.insertBefore(t,e)})()</script><script type=text/javascript>Object.prototype.toString.call(window.Promise)!=="[object Function]"&&(window.Promise=null)</script><script type=text/javascript src="https://d-j.fun/js/vendor/jquery/index.js?v=2.1.3"></script>
+<script type=text/javascript src="https://d-j.fun/js/vendor/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+<script type=text/javascript src="https://d-j.fun/js/vendor/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+<script type=text/javascript src="https://d-j.fun/js/vendor/velocity/velocity.min.js?v=1.2.1"></script>
+<script type=text/javascript src="https://d-j.fun/js/vendor/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="https://d-j.fun/js/vendor/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+<script src="https://d-j.fun/js/vendor/fancybox/jquery.fancybox.pack.js?v=2.1.5"></script>
+<script type=text/javascript src=https://d-j.fun/js/utils.js></script>
+<script type=text/javascript src=https://d-j.fun/js/motion.js></script>
+<script type=text/javascript src=https://d-j.fun/js/affix.js></script>
+<script type=text/javascript src=https://d-j.fun/js/schemes/pisces.js></script>
+<script type=text/javascript src=https://d-j.fun/js/scrollspy.js></script>
+<script type=text/javascript src=https://d-j.fun/js/post-details.js></script>
+<script type=text/javascript src=https://d-j.fun/js/toc.js></script>
+<script type=text/javascript src=https://d-j.fun/js/bootstrap.js></script>
+<script type=text/javascript src=https://d-j.fun/js/search.js></script>
+<script type=text/x-mathjax-config>
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX", "output/HTML-CSS"],
+    tex2jax: {
+      inlineMath: [ ['$','$'] ],
+      displayMath: [ ['$$','$$'] ],
+      processEscapes: true
+    },
+    "HTML-CSS": { fonts: ["TeX"] }
+  });
+</script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async></script>
+<script src=//unpkg.com/valine/dist/Valine.min.js></script>
+<script type=text/javascript>new Valine({el:"#vcomments",appId:"OHRSTedbIkBw8vMft7nXrSD6-gzGzoHsz",appKey:"qSWgGIqVOpJ10tsWsNJEI9I7",visitor:!0,placeholder:" 欢迎留下您的宝贵建议，请填写您的昵称和邮箱便于后续交流. ^_^ ",requiredFields:["nick","mail"],lang:"zh"})</script></body></html>
