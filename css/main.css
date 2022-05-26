@@ -1606,6 +1606,7 @@ pre .javascript .function {
   border-bottom: 1px solid transparent;
   font-size: 14px;
   color: #555;
+  margin: 0 5px;
 }
 .sidebar-nav li:hover {
   color: #fc6423;
