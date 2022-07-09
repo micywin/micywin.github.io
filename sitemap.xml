@@ -51,7 +51,8 @@ echo &amp;#34;\n观察加密效果，这是机密数据&amp;#34; &amp;gt;&amp;gt
 结合AES和RSA 生成一个keyfile，作为AES加密的密钥文件。
 openssl rand 256 &amp;gt; pwd.key AES加密test.txt，完成不到5s。
 &amp;gt;&amp;gt; time openssl enc -in test.txt -out test.txt.enc -e -aes256 -k pwd.key openssl enc -in test.txt -out test.txt.enc -e -aes256 -k pwd.key 1.37s user 1.74s system 79% cpu 3.918 total AES解密test.txt.enc, 完成不到3s
-&amp;gt;&amp;gt; time openssl enc -in test.txt.enc -out test.txt.decrypt -d -aes256 -k pwd.key openssl enc -in test.txt.enc -out test.txt.decrypt -d -aes256 -k pwd.key 0.51s user 1.99s system 72% cpu 3.434 total RSA相关操作
+&amp;gt;&amp;gt; time openssl enc -in test.txt.enc -out test.txt.decrypt -d -aes256 -k pwd.key openssl enc -in test.txt.enc -out test.txt.decrypt -d -aes256 -k pwd.key 0.51s user 1.99s system 72% cpu 3.434 total 举例：
+openssl enc -aes-256-cbc [-pass pass:密码] -in 源文件 -out 加密后的文件 openssl enc -d -aes-256-cbc -in 加密后的文件 -out 解密文件 RSA相关操作
 生成私钥openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:2048 对应公钥openssl rsa -pubout -in private_key.pem -out public_key.pem 加密密钥文件
 openssl rsautl -encrypt -inkey public_key.pem -pubin -in pwd.key -out pwd.key.enc 解密密钥文件
 openssl rsautl -decrypt -inkey private_key.pem -in pwd.key.enc -out pwd.key 总结 AES适合机密大文件、RSA加密方法安全。总体思路：使用RSA加密密钥文件，然后使用AES结合密钥文件加密大文件。
