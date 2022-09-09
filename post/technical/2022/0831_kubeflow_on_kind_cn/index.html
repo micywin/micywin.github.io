@@ -17,7 +17,7 @@
 <span>&nbsp; | &nbsp;
 <span class=post-meta-item-icon><i class="fa fa-eye"></i></span>
 <span class=post-meta-item-text>阅读：</span>
-<span class=leancloud-visitors-count>1350 字 ~3分钟</span></span></div></header><div class=post-body itemprop=articleBody><p>kubeflow 机器学习的工具集，包含Notebook（交互实验）、AutoML（自动化处理）、Pipeline（流水线）、Serverless（部署）。</p><p>由于是google自己的产品开源，很多组建依赖于google，即国内不友好。这里推荐一个国内的解决方案（https://github.com/shikanon/kubeflow-manifests/）。</p><h2 id=kind-工具安装集群>kind 工具安装集群</h2><h3 id=安装kind>安装kind</h3><p>kind是搭建本地k8s集群的工具，主要用来测试k8s，安装kind可以使用release binary方式：</p><div class=highlight><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.14.0/kind-linux-amd64
+<span class=leancloud-visitors-count>1964 字 ~4分钟</span></span></div></header><div class=post-body itemprop=articleBody><p>kubeflow 机器学习的工具集，包含Notebook（交互实验）、AutoML（自动化处理）、Pipeline（流水线）、Serverless（部署）。</p><p>由于是google自己的产品开源，很多组建依赖于google，即国内不友好。这里推荐一个国内的解决方案（https://github.com/shikanon/kubeflow-manifests/）。</p><h2 id=kind-工具安装集群>kind 工具安装集群</h2><h3 id=安装kind>安装kind</h3><p>kind是搭建本地k8s集群的工具，主要用来测试k8s，安装kind可以使用release binary方式：</p><div class=highlight><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.14.0/kind-linux-amd64
 </span></span><span style=display:flex><span>chmod +x ./kind
 </span></span><span style=display:flex><span>sudo mv ./kind /usr/local/bin/kind
 </span></span></code></pre></div><h3 id=创建集群>创建集群</h3><div class=highlight><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>kind create cluster --config<span style=color:#555>=</span>kind/kind-config.yaml --name<span style=color:#555>=</span>kubeflow --image<span style=color:#555>=</span>kindest/node:v1.19.11
@@ -32,7 +32,59 @@
 </span></span></code></pre></div><p>命名空间的问题，将命名空间kubeflow替换为自己的命名空间（我修改为了kubeflow-admin）
 解决办法</p><div class=highlight><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>kubectl get secret mlpipeline-minio-artifact --namespace<span style=color:#555>=</span>kubeflow -o yaml | sed <span style=color:#c30>&#39;s/namespace: kubeflow/namespace: kubeflow-admin/&#39;</span> | kubectl create -f -
 </span></span></code></pre></div><ul><li>pipeline运行报错</li></ul><p>这个错误是由于 kind 集群创建的 k8s 集群容器运行时用的containerd，而workflow默认的pipeline执行器是docker，因此有些特性不兼容。如果你的 k8s 集群是自己基于docker runtime 搭建的，可以将patch/workflow-controller.yaml的containerRuntimeExecutor改为docker，这样就不存在兼容性问题了。
-详见 <a href=https://github.com/shikanon/kubeflow-manifests/blob/master/docs/problems.md>方案文档</a></p><h2 id=引用>引用</h2><blockquote><p><a href=https://github.com/shikanon/kubeflow-manifests/>https://github.com/shikanon/kubeflow-manifests/</a>
+详见 <a href=https://github.com/shikanon/kubeflow-manifests/blob/master/docs/problems.md>方案文档</a></p><ul><li>notebook pod 无root权限</li></ul><p>jupyter-web-app pod是负责管理 notebook-server接口的提供者，使用flask实现的，并用<code>/usr/local/bin/gunicorn</code>向外提供服务。
+<code>kubectl exec -it jupyter-web-app-deployment-{序号} -n kubeflow -- bash</code>可以连接到pod中的容器中
+编辑容器中<code>apps/common/yaml/notebook_template.yaml</code>，添加</p><div class=highlight><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>securityContext:
+</span></span><span style=display:flex><span>       runAsUser: <span style=color:#f60>0</span>
+</span></span><span style=display:flex><span>       runAsGroup: <span style=color:#f60>0</span>
+</span></span><span style=display:flex><span>       fsGroup: <span style=color:#f60>0</span>
+</span></span></code></pre></div><p>然后重新添加一个notebook server，通过terminal进去，便可以发现是root用户，可以通过apt安装自己想要的组建。
+我是安装tfx，需要gcc g++， 通过执行<code>apt install gcc g++</code>便解决了。</p><ul><li>kfp client 403</li></ul><p><code>Internal error: Unauthenticated: Request header error: there is no user identity header.: Request header error: there is no user identity header</code>
+这些报错是请求的时候缺少header头，可以通过附加认证策略来解决</p><div class=highlight><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>apiVersion: security.istio.io/v1beta1
+</span></span><span style=display:flex><span>kind: AuthorizationPolicy
+</span></span><span style=display:flex><span>metadata:
+</span></span><span style=display:flex><span> name: bind-ml-pipeline-nb-kubeflow-admin
+</span></span><span style=display:flex><span> namespace: kubeflow
+</span></span><span style=display:flex><span>spec:
+</span></span><span style=display:flex><span> selector:
+</span></span><span style=display:flex><span>   matchLabels:
+</span></span><span style=display:flex><span>     app: ml-pipeline
+</span></span><span style=display:flex><span> rules:
+</span></span><span style=display:flex><span> - from:
+</span></span><span style=display:flex><span>   - source:
+</span></span><span style=display:flex><span>       principals: <span style=color:#555>[</span><span style=color:#c30>&#34;cluster.local/ns/kubeflow-admin/sa/default-editor&#34;</span><span style=color:#555>]</span>
+</span></span><span style=display:flex><span>       
+</span></span><span style=display:flex><span>   --
+</span></span><span style=display:flex><span>   
+</span></span><span style=display:flex><span>   apiVersion: networking.istio.io/v1alpha3
+</span></span><span style=display:flex><span>kind: EnvoyFilter
+</span></span><span style=display:flex><span>metadata:
+</span></span><span style=display:flex><span>  name: add-header
+</span></span><span style=display:flex><span>  namespace: kubeflow-admin
+</span></span><span style=display:flex><span>spec:
+</span></span><span style=display:flex><span>  configPatches:
+</span></span><span style=display:flex><span>  - applyTo: VIRTUAL_HOST
+</span></span><span style=display:flex><span>    match:
+</span></span><span style=display:flex><span>      context: SIDECAR_OUTBOUND
+</span></span><span style=display:flex><span>      routeConfiguration:
+</span></span><span style=display:flex><span>        vhost:
+</span></span><span style=display:flex><span>          name: ml-pipeline.kubeflow.svc.cluster.local:8888
+</span></span><span style=display:flex><span>          route:
+</span></span><span style=display:flex><span>            name: default
+</span></span><span style=display:flex><span>    patch:
+</span></span><span style=display:flex><span>      operation: MERGE
+</span></span><span style=display:flex><span>      value:
+</span></span><span style=display:flex><span>        request_headers_to_add:
+</span></span><span style=display:flex><span>        - append: <span style=color:#366>true</span>
+</span></span><span style=display:flex><span>          header:
+</span></span><span style=display:flex><span>            key: kubeflow-userid
+</span></span><span style=display:flex><span>            value: admin@example.com
+</span></span><span style=display:flex><span>  workloadSelector:
+</span></span><span style=display:flex><span>    labels:
+</span></span><span style=display:flex><span>      notebook-name: test999
+</span></span></code></pre></div><p>如果将<code>workloadSelector</code>去掉，那么会应用于所有的notebook</p><div class=highlight><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span>    client <span style=color:#555>=</span> kfp<span style=color:#555>.</span>Client()
+</span></span><span style=display:flex><span>    client<span style=color:#555>.</span>create_run_from_pipeline_package(pipeline_file<span style=color:#555>=</span><span style=color:#c30>&#39;</span><span style=color:#a00>{yaml文件}</span><span style=color:#c30>&#39;</span>, arguments<span style=color:#555>=</span>{},experiment_name<span style=color:#555>=</span><span style=color:#c30>&#34;</span><span style=color:#a00>{实验名称}</span><span style=color:#c30>&#34;</span>, namespace<span style=color:#555>=</span><span style=color:#c30>&#34;</span><span style=color:#a00>{命名空间}</span><span style=color:#c30>&#34;</span>)
+</span></span></code></pre></div><p>执行结果会列出对应的 <code>run</code> 的链接。</p><h2 id=引用>引用</h2><blockquote><p><a href=https://github.com/shikanon/kubeflow-manifests/>https://github.com/shikanon/kubeflow-manifests/</a>
 <a href="https://hub.docker.com/r/kindest/node/tags?page=1&name=v1.19">https://hub.docker.com/r/kindest/node/tags?page=1&name=v1.19</a> kind镜像版本
 <a href=https://github.com/argoproj/argo-workflows>https://github.com/argoproj/argo-workflows</a> argo workflow
 <a href=https://github.com/kubeflow/pipelines>https://github.com/kubeflow/pipelines</a> kubeflow</p></blockquote></div><footer class=post-footer><div class=post-tags><a href=https://d-j.fun/tags/%e8%bf%90%e7%bb%b4 rel=tag title=运维>#运维#</a></div><div class=post-nav><div class="post-nav-next post-nav-item"></div><div class="post-nav-prev post-nav-item"><a href=https://d-j.fun/post/technical/2022/0712_laravel_queue_work_source_analysis/ rel=prev title="Laravel 消息队列源码分析">Laravel 消息队列源码分析 <i class="fa fa-chevron-right"></i></a></div></div><div id=vcomments></div></footer></article></section></div></div><div class=sidebar-toggle><div class=sidebar-toggle-line-wrap><span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
@@ -44,7 +96,7 @@
 GitHub</a></span></div></section><section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active"><div class=post-toc><div class=post-toc-content><nav id=TableOfContents><ul><li><a href=#kind-工具安装集群>kind 工具安装集群</a><ul><li><a href=#安装kind>安装kind</a></li><li><a href=#创建集群>创建集群</a></li></ul></li><li><a href=#解决方案简介>解决方案简介</a></li><li><a href=#后续问题>后续问题</a></li><li><a href=#引用>引用</a></li></ul></nav></div></div></section></div></aside></div></main><footer id=footer class=footer><div class=footer-inner><div class=copyright><span itemprop=copyrightYear>&copy;
 2009 - 2022</span>
 <span class=with-love><i class="fa fa-heart"></i></span>
-<span class=author itemprop=copyrightHolder>吃不上鱼的dj猫</span></div><div class=powered-by>Powered by - <a class=theme-link href=http://gohugo.io target=_blank title=hugo>Hugo v0.102.1</a></div><div class=theme-info>Theme by - <a class=theme-link href=https://github.com/micywin/micywin.github.io target=_blank>NexT</a></div></div></footer><div class=back-to-top><i class="fa fa-arrow-up"></i>
+<span class=author itemprop=copyrightHolder>吃不上鱼的dj猫</span></div><div class=powered-by>Powered by - <a class=theme-link href=http://gohugo.io target=_blank title=hugo>Hugo v0.102.3</a></div><div class=theme-info>Theme by - <a class=theme-link href=https://github.com/micywin/micywin.github.io target=_blank>NexT</a></div></div></footer><div class=back-to-top><i class="fa fa-arrow-up"></i>
 <span id=scrollpercent><span>0</span>%</span></div></div><script>var _hmt=_hmt||[];(function(){var e,t=document.createElement("script");t.src="//hm.baidu.com/hm.js?d99271cdde903024e3e5c6bee73674ca",e=document.getElementsByTagName("script")[0],e.parentNode.insertBefore(t,e)})()</script><script type=text/javascript>Object.prototype.toString.call(window.Promise)!=="[object Function]"&&(window.Promise=null)</script><script type=text/javascript src="https://d-j.fun/js/vendor/jquery/index.js?v=2.1.3"></script>
 <script type=text/javascript src="https://d-j.fun/js/vendor/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
 <script type=text/javascript src="https://d-j.fun/js/vendor/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
