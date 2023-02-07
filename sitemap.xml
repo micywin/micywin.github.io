@@ -1,4 +1,20 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><search><entry><title>kind上安装kubeflow（国内镜像源）</title><url>https://www.d-j.fun/post/technical/2022/0831_kubeflow_on_kind_cn/</url><categories><category>technical</category></categories><tags><tag>运维</tag></tags><content type="html"> kubeflow 机器学习的工具集，包含Notebook（交互实验）、AutoML（自动化处理）、Pipeline（流水线）、Serverless（部署）。
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><search><entry><title>mysql执行计划命令explain的输出解释</title><url>https://www.d-j.fun/post/notes/2023/0207_mysql_explain_related/</url><categories><category>notes</category></categories><tags><tag>mysql</tag></tags><content type="html"> 平时所说mysql优化，最常用的手段就是通过执行explain（desc） 具体的sql，获取到mysql执行计划的一些信息，根据平时积累的经验来判别sql的执行效率。使用explain工具的前提，需要积累很多mysql相关基础知识。否则即使了解了输出什么意思，也没办法得出什么有用的结论。本片文章就explain输出的几个字段做出解释。
+必需基础知识 索引结构和存储 仅就innodb索引来说明，innodb是由B+树组织索引，下面就innodb索引分类简单解释：
+主键索引 叶子节点存储的是整行数据 非叶子节点存储主键数据 二级索引 或普通索引 叶子节点存储的是主键id 非叶子节点存储指定字段数据 mysql 组成结构 mysql由连接器（管理连接和权限验证）、分析器（词法分析、语法分析）、优化器（索引选择、执行顺序）、执行器（调用存储引擎、得出结果并返回）组成，而存储引擎作为插件式被执行器调用。 一个个客户端要执行sql，首先要创建连接，然后经过分析器分析判断是否是合法的sql，如果合法得出语法树，交给优化器。优化器根据内嵌的规则进行索引选择、子表执行顺序等，输出执行计划。explain得出的便是执行计划相关的信息。
+expain输出字段 type 执行计划类型 type是根据执行计划查询特征来分类，一定程度可以代表一次查询的性能指标。通过该字段可以判断出是否走索引（all），以什么形式（range）。 主要包括（根据性能排序）：
+all 全表扫描，没有可用的索引，只能扫描主键索引。 index 遍历索引树，索引树叶子节点只包含主键，数据量更小 range 在INDEX的基础上，范围扫描，比如between 大于小于 REF 非唯一索引扫描 EQ_REF 唯一索引扫描 const system 常量查询，比如 查询主键 null 执行时不需要访问表和索引 可以发现执行计划类型主要根据是否使用索引、使用什么类型索引以及怎么使用索引来分类的。
+key len的计算 key_len 顾名思义就是所使用到的 索引元组项的长度。比如 create index name_age_index on table (name, age);，创建name、age为联合索引，name为varchar(191)， age为int， 执行name=&amp;quot;abc&amp;quot; and age = 3， 便会发现key_len的值为 770。
+首先 字符串的计算规则：
+各个字符集下，每个字符存储的长度为 latin 1个字节，gbk 2个字节，utf8 3个字节，utf8mb4 4个字节，（因为utf8只有三个字节，所以会损失一些字符，建议使用4个字节的utf8mb4） 如果是varchar会比原来的长度+2个字节，记录字段存储内容的长度。 如果允许为null，再增加一个字节记录是否为null 上面的例子 name为varchar 191 * 4 + 2 = 766
+其他类型的计算规则：
+int 4个字节、mediumint 3个字节、smallint 2个字节、tinyint 1个字节 datetime 8、timestamp 4、time 3、date 3、year 1 如果允许为null，再增加一个字节记录是否为null 上面的例子 age为int 不允许为null 所以为4
+重要的extra字段 Using filesort 一个sql的排序过程 分为 全字段排序和rowid排序，排序默认会选择再sort buffer（mysql专门为排序创建的缓存区）进行排序，如果buffer空间不够，会选择利用文件进行合并排序（即分为一定数量的文件，各个文件分别排序，再组合在一起）。很明显如果出现using filesort 代表是可以优化的：
+考虑业务需求是不是可以不再这里排序 尝试通过调整buffer空间 如果必须进行文件排序，那么是否可以通过覆盖索引减少回表次数 Using where 参考MySQL组成结构，可以发现 执行器输入MySQL，而存储引擎是插件式组件。 如果where条件中有不在索引元组字段中的字段，比如索引元组为（age, name）， where中包含sex的查询。这种情况下，该索引已经无法满足本次查询，必须回表获取完整的数据，然后在MySQL服务器中做二次过滤。 explain select name from a where name = &amp;quot;jerry&amp;quot; and sex =1 ;
+Using index 相对应的，完全可以通过索引覆盖查询需求
+Using Index Condition 先通过索引里的数据进行筛选，一般情况下索引会根据索引项找到所有相关的数据，是不会进行任何过滤的，比如 name = &amp;ldquo;jerry&amp;rdquo; and age &amp;gt; 3, 存储引擎在没有索引下推icp的情况下是直接返回所有name = jerry的数据，而在MySQL服务器端进行age &amp;gt; 3的过滤，这种情况下会增加回表的记录个数。
+案例分析 explain select sex from a where name = &amp;quot;jerry&amp;quot; and age &amp;gt; 1 ; explain select name from a where name = &amp;quot;jerry&amp;quot; and age &amp;gt; 1 ; 1 在extra中显示的是Using Index Condition，2 显示的是 Using where; Using index
+区别在于2输入覆盖索引，不需要回表查询：
+Using index 代表覆盖索引 Using where 在这里代表 进行了索引的过滤 总结 MySQL优化可以通过explain的输出窥见一斑，但是更深次的原因以及后续需要采用的优化手段，却需要大量的mysql关于索引、执行计划以及其细节才能做到。</content></entry><entry><title>kind上安装kubeflow（国内镜像源）</title><url>https://www.d-j.fun/post/technical/2022/0831_kubeflow_on_kind_cn/</url><categories><category>technical</category></categories><tags><tag>运维</tag></tags><content type="html"> kubeflow 机器学习的工具集，包含Notebook（交互实验）、AutoML（自动化处理）、Pipeline（流水线）、Serverless（部署）。
 由于是google自己的产品开源，很多组建依赖于google，即国内不友好。这里推荐一个国内的解决方案（https://github.com/shikanon/kubeflow-manifests/）。
 kind 工具安装集群 安装kind kind是搭建本地k8s集群的工具，主要用来测试k8s，安装kind可以使用release binary方式：
 curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.14.0/kind-linux-amd64 chmod +x ./kind sudo mv ./kind /usr/local/bin/kind 创建集群 kind create cluster --config=kind/kind-config.yaml --name=kubeflow --image=kindest/node:v1.19.11 先拉取shikanon/kubeflow-manifests，在代码根目录执行该语句，config对应文件kind/kind-config.yaml便是在这里
