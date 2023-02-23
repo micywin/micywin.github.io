@@ -1,4 +1,12 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><search><entry><title>mysql执行计划命令explain的输出解释</title><url>https://www.d-j.fun/post/notes/2023/0207_mysql_explain_related/</url><categories><category>notes</category></categories><tags><tag>mysql</tag></tags><content type="html"> 平时所说mysql优化，最常用的手段就是通过执行explain（desc） 具体的sql，获取到mysql执行计划的一些信息，根据平时积累的经验来判别sql的执行效率。使用explain工具的前提，需要积累很多mysql相关基础知识。否则即使了解了输出什么意思，也没办法得出什么有用的结论。本片文章就explain输出的几个字段做出解释。
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><search><entry><title>TCP网络编程概览</title><url>https://www.d-j.fun/post/notes/2023/0216_tcp_all_related/</url><categories><category>notes</category></categories><tags/><content type="html"> 端口号根据范围分为三种
+Well-Known Ports（即公认端口号） 它是一些众人皆知著名的端口号，这些端口号固定分配给一些服务，我们上面提到的 HTTP 服务、 FTP服务等都属于这一类。知名端口号的范围是：0-1023
+Registered Ports（即注册端口） 它是不可以动态调整的端口段，这些端口没有明确定义服务哪些特定的对象。不同的程序可以根据自己的需要自己定义，注册端口号的范围是：1024-49151
+Dynamic, private or ephemeral ports（即动态、私有或临时端口号） 顾名思义，这些端口号是不可以注册的，这一段的端口被用作一些私人的或者定制化的服务，当然也可以用来做动态端口服务，这一段的范围是：49152–65535
+TCP 和 UDP 可以同时绑定相同的端口吗？ 答案：可以的。
+在数据链路层中，通过 MAC 地址来寻找局域网中的主机。在网际层中，通过 IP 地址来寻找网络中互连的主机或路由器。在传输层中，需要通过端口进行寻址，来识别同一计算机中同时通信的不同应用程序。
+所以，传输层的「端口号」的作用，是为了区分同一个主机上不同应用程序的数据包。
+传输层有两个传输协议分别是 TCP 和 UDP，在内核中是两个完全独立的软件模块。
+当主机收到数据包后，可以在 IP 包头的「协议号」字段知道该数据包是 TCP/UDP，所以可以根据这个信息确定送给哪个模块（TCP/UDP）处理，送给 TCP/UDP 模块的报文根据「端口号」确定送给哪个应用程序处理。</content></entry><entry><title>mysql执行计划命令explain的输出解释</title><url>https://www.d-j.fun/post/notes/2023/0207_mysql_explain_related/</url><categories><category>notes</category></categories><tags><tag>mysql</tag></tags><content type="html"> 平时所说mysql优化，最常用的手段就是通过执行explain（desc） 具体的sql，获取到mysql执行计划的一些信息，根据平时积累的经验来判别sql的执行效率。使用explain工具的前提，需要积累很多mysql相关基础知识。否则即使了解了输出什么意思，也没办法得出什么有用的结论。本片文章就explain输出的几个字段做出解释。
 必需基础知识 索引结构和存储 仅就innodb索引来说明，innodb是由B+树组织索引，下面就innodb索引分类简单解释：
 主键索引 叶子节点存储的是整行数据 非叶子节点存储主键数据 二级索引 或普通索引 叶子节点存储的是主键id 非叶子节点存储指定字段数据 mysql 组成结构 mysql由连接器（管理连接和权限验证）、分析器（词法分析、语法分析）、优化器（索引选择、执行顺序）、执行器（调用存储引擎、得出结果并返回）组成，而存储引擎作为插件式被执行器调用。 一个个客户端要执行sql，首先要创建连接，然后经过分析器分析判断是否是合法的sql，如果合法得出语法树，交给优化器。优化器根据内嵌的规则进行索引选择、子表执行顺序等，输出执行计划。explain得出的便是执行计划相关的信息。
 expain输出字段 type 执行计划类型 type是根据执行计划查询特征来分类，一定程度可以代表一次查询的性能指标。通过该字段可以判断出是否走索引（all），以什么形式（range）。 主要包括（根据性能排序）：
