@@ -1,4 +1,15 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><search><entry><title>TCP网络编程概览</title><url>https://m.yanhuo.fun/post/notes/2023/0216_tcp_all_related/</url><categories><category>notes</category></categories><tags/><content type="html"> 端口号根据范围分为三种
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><search><entry><title>MediaPipe 简单测试</title><url>https://m.yanhuo.fun/post/notes/2024/0305_mediapipe_test/</url><categories><category>notes</category></categories><tags><tag>mediapipe</tag></tags><content type="html"> MediaPipe: 简化复杂媒体处理的开源框架 在当今数字化时代，实时视频处理和分析变得越来越重要。无论是社交媒体的滤镜、虚拟现实应用还是高级监控系统，背后都需要强大而复杂的技术支持。这就是MediaPipe闪亮登场的时刻，一个由Google开发的开源跨平台框架，旨在构建性能优化的媒体处理管道。
+引言：为什么MediaPipe如此特别？ 在深入探讨MediaPipe之前，让我们先思考一个问题：在实时处理复杂媒体流（如视频、音频和图像序列）时，开发者面临哪些挑战？
+首先，性能是一个巨大的考验。实时应用要求高效的数据处理，以保证流畅的用户体验。其次，多平台兼容性也是必须考虑的因素，开发者希望他们的应用能够跨操作系统工作，无论是Android、iOS还是Web。最后，快速原型开发和迭代也同样重要，以便快速响应市场变化。
+MediaPipe应运而生，提供了一个高效、灵活且易于使用的解决方案，让开发者可以更容易地构建和部署复杂的媒体处理模型。
+概要：MediaPipe的核心特性 MediaPipe框架的设计充满了创新，它提供了一系列的特性，让媒体处理变得更加高效和灵活：
+跨平台支持：支持Android、iOS、Web和桌面平台，让你的应用可以广泛传播。 预构建模型：集成了多种预构建的机器学习模型，如手势识别、面部标记、对象检测和跟踪等，加速开发过程。 灵活的图形框架：基于图(graph)的框架设计，允许开发者灵活定义数据流通过的处理节点。 性能优化：针对移动设备优化，确保高效处理和低延迟。 核心知识展示：MediaPipe的工作原理 MediaPipe的魔法在于其背后的图形处理系统。每一个应用都被定义为一个图，其中的节点（称为Calculator）负责执行特定的处理任务，如视频帧的捕获、图像的变换、特征的提取等。数据以包(Packet)的形式在节点间流动，每个包可以包含任意类型的数据，如图像、视频帧、音频样本或简单的数字。
+数据流和节点 考虑一个简单的例子：一个实时面部识别应用。在这个应用的MediaPipe图中，首先有一个视频帧捕获节点，负责从摄像头获取数据。然后，数据包被送到面部检测节点，该节点使用机器学习模型识别出视频中的面部。最后，结果可以被送到一个渲染节点，在用户界面上绘制面部边框。
+graph LR A[视频帧捕获] --&amp;gt; B[面部检测] B --&amp;gt; C[渲染面部边框] 优化与兼容性 MediaPipe利用GPU加速（在支持的平台上）和多线程来优化性能，确保即使是在低功耗设备上也能实现实时处理。同时，通过提供各种预构建的模型和处理节点，MediaPipe简化了跨平台应用的开发流程。
+展示代码片段：使用MediaPipe进行手势识别 让我们通过一个简单的示例来看看如何使用MediaPipe进行手势识别。以下是一个基本的代码片段，展示了如何在Python中设置和使用MediaPipe的手势识别模型。
+import mediapipe as mp # 初始化MediaPipe手势识别 mp_hands = mp.solutions.hands hands = mp_hands.Hands() # 处理图像并识别手势 results = hands.process(image) # 打印识别到的手势信息 if results.multi_hand_landmarks: for hand_landmarks in results.multi_hand_landmarks: print(hand_landmarks) 这段代码首先导入MediaPipe库，然后初始化手势识别模型。之后，它处理一个图像（这里的image变量应该是你的图像数据），并打印出识别到的手部标记信息。
+总结 MediaPipe提供了一个强大而灵活的框架，用于构建和部署复杂的媒体处理应用。通过其跨平台支持、预构建模型和高效的图形处理系统，开发者可以更容易地创建出引人注目的实时媒体应用。无论你是在构建一个互动游戏、社交媒体滤镜还是高级监控系统，MediaPipe都是一个值得考虑的工具。
+MediaPipe的开放源代码和活跃的社区也意味着它将继续发展和改进，为开发者提供更多的机会和可能性。如果你对开发有关媒体处理的应用感兴趣，那么现在就是时候开始探索MediaPipe了。</content></entry><entry><title>TCP网络编程概览</title><url>https://m.yanhuo.fun/post/notes/2023/0216_tcp_all_related/</url><categories><category>notes</category></categories><tags/><content type="html"> 端口号根据范围分为三种
 Well-Known Ports（即公认端口号） 它是一些众人皆知著名的端口号，这些端口号固定分配给一些服务，我们上面提到的 HTTP 服务、 FTP服务等都属于这一类。知名端口号的范围是：0-1023
 Registered Ports（即注册端口） 它是不可以动态调整的端口段，这些端口没有明确定义服务哪些特定的对象。不同的程序可以根据自己的需要自己定义，注册端口号的范围是：1024-49151
 Dynamic, private or ephemeral ports（即动态、私有或临时端口号） 顾名思义，这些端口号是不可以注册的，这一段的端口被用作一些私人的或者定制化的服务，当然也可以用来做动态端口服务，这一段的范围是：49152–65535
