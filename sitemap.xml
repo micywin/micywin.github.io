@@ -1,4 +1,19 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><search><entry><title>Python GUI技术方案分析及选型</title><url>https://www.d-j.fun/post/notes/2024/0308_python_gui_select/</url><categories><category>notes</category></categories><tags><tag>pyside</tag></tags><content type="html"> Python GUI技术方案分析及选型 Python作为一门广泛使用的编程语言，其图形用户界面（GUI）开发选项多样，本文将逐一介绍几种主要的Python GUI技术方案，从而帮助开发者进行合理的选型。
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><search><entry><title>最新Stable Diffusion下载+安装+使用教程（超详细版本）</title><url>https://www.d-j.fun/post/notes/2024/0310-sd-install/</url><categories><category>notes</category></categories><tags><tag>sd</tag></tags><content type="html"> 前言
+随着AI绘画技术的不断发展，Stable Diffusion（SD）作为一种深度学习文本到图像生成模型，受到了越来越多人的关注和应用。本文将基于最新的SD整合包，结合笔者整合的资源，为大家介绍最基础的概念和安装方式，使更多人能够轻松上手SD模型，并享受到AI绘画的乐趣。
+Stable Diffusion（SD）是什么 Stable Diffusion是一个由Stability AI与多个学术研究者和非营利组织合作开发的深度学习文本到图像生成模型。自2022年发布以来，SD源代码和模型已在GitHub上开源，并由AUTOMATIC1111维护。SD模型具有离线运行的特性，适用于大多数配备至少8GB显存的适度GPU的消费级硬件。开源社区为SD的普及做出了重要贡献，使更多人能够参与到AI绘画的领域中。
+SD基本概念 SD模型涉及多个概念和组件，其中包括：
+大模型： 作为生成图像的底料，直接影响生成图像的大方向。 VAE： 类似于滤镜，用于稳定画面的色彩范围。 LoRA： 可以在中小范围内影响出图的风格，是大模型的补充。 ControlNet： 为SD模型提供了“眼睛”，使其能够根据现有图片获取线条或景深等信息。 Stable Diffusion Web-UI（SD-WEBUI）： 是一个开源软件，基于Stability AI算法制作，能够通过图形界面操控SD模型。 秋叶包： 是中国开发者秋叶开发的整合包，为SD的部署和使用提供了便利。 安装Stable Diffusion 步骤一：安装运行依赖 在开始安装Stable Diffusion之前，首先需要安装运行依赖。请双击运行“启动器运行依赖-dotnet-6.0.11.exe”文件，并按照提示完成安装。
+步骤二：解压安装包 下载并解压“sd-webui-aki-v4.zip”安装包。您可以选择将其解压到任意您喜欢的目录中，以便进行下一步操作。
+步骤三：导入核心数据 将下载好的大模型、ControlNet模型和LoRA模型放置到相应的目录下。确保大模型放置在\sd-webui-aki-v4\models\Stable-diffusion目录下，ControlNet模型放置在\sd-webui-aki-v4\models\ControlNet目录下，LoRA模型放置在\sd-webui-aki-v4\extensions\sd-webui-additional-networks\models\lora目录下。
+步骤四：下载推荐大模型 下载推荐大模型文件夹中的模型，并将所有模型放置到\sd-webui-aki-v4\models\Stable-diffusion目录下。
+步骤五：下载ControlNet模型 下载ControlNet模型文件夹中的模型，并将所有内容放置到\sd-webui-aki-v4\models\ControlNet目录下。
+步骤六：下载推荐LoRA 下载LoRA模型文件夹中的所有LoRA模型，并将其全部放置到\sd-webui-aki-v4\extensions\sd-webui-additional-networks\models\lora目录下。这样，您就完成了Stable Diffusion的安装准备工作。
+使用Stable Diffusion 1. 开启软件运行 双击“A启动器.exe”，点击“一键启动”按钮。等待软件自动打开浏览器网页或手动输入网址：http://127.0.0.1:7860 ，确保软件已经启动成功。
+2. 生成图像 在SD-WEBUI界面中输入您想要生成图像的关键词，然后点击“生成”按钮。等待一段时间后，您将会看到生成的图像结果。
+结论 现在您已经成功地安装了Stable Diffusion模型，您可以尝试使用不同的大模型、LoRA和ControlNet模型来生成多样化的图像。通过尝试不同的参数和组合，您将可以探索到更多有趣的图像生成效果。
+为了进一步提升图像生成的效果，您可以尝试调整SD模型的参数或者在训练时使用不同的数据集。通过对模型进行微调和优化，您可以获得更加满意的图像生成结果，同时也可以提高SD模型的性能和稳定性。
+在使用SD模型的过程中，您可能会遇到一些问题或者有一些新的想法和需求。您可以通过查阅SD模型的官方文档、访问相关的论坛和社区，或者参考其他用户的经验和分享来解决问题，获取灵感，不断地提升自己的图像生成技能。
+最重要的是，不断地练习和尝试是掌握SD模型的关键。只有通过不断地实践和探索，您才能够深入理解SD模型的原理和特性，熟练</content></entry><entry><title>Python GUI技术方案分析及选型</title><url>https://www.d-j.fun/post/notes/2024/0308_python_gui_select/</url><categories><category>notes</category></categories><tags><tag>pyside</tag></tags><content type="html"> Python GUI技术方案分析及选型 Python作为一门广泛使用的编程语言，其图形用户界面（GUI）开发选项多样，本文将逐一介绍几种主要的Python GUI技术方案，从而帮助开发者进行合理的选型。
 引言 GUI是软件开发中不可或缺的一部分，它使得用户能够直观、方便地与程序进行交互。Python虽然以其在数据科学、网络开发中的应用最为人所熟知，但它在GUI开发方面也具有不错的表现。
 概要 Python GUI开发的几种技术方案主要包括：
 Tkinter PyQt WxPython Kivy 下面将详细介绍每种技术的特点、适用场景及示例代码。
