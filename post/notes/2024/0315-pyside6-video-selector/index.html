@@ -1,0 +1,103 @@
+<!doctype html><html lang=zh-CN><head><meta charset=UTF-8><meta http-equiv=X-UA-Compatible content="IE=edge,chrome=1"><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1"><title>设计一个视频帧选择器界面 - 吃不上鱼的dj猫</title>
+<meta name=keywords content="xxx,"><meta property="og:title" content="设计一个视频帧选择器界面"><meta property="og:site_name" content="吃不上鱼的dj猫"><meta property="og:image" content="/img/logo.jpg"><meta name=title content="设计一个视频帧选择器界面 - 吃不上鱼的dj猫"><meta name=description content="xxx"><link rel="shortcut icon" href=https://www.d-j.fun/img/favicon.ico><link rel=apple-touch-icon href=https://www.d-j.fun/img/apple-touch-icon.png><link rel=apple-touch-icon-precomposed href=https://www.d-j.fun/img/apple-touch-icon.png><link href="https://www.d-j.fun/js/vendor/font-awesome/css/font-awesome.min.css?v=4.6.2" rel=stylesheet type=text/css><link href="https://www.d-j.fun/js/vendor/fancybox/jquery.fancybox.css?v=2.1.5" rel=stylesheet type=text/css><link href=https://www.d-j.fun/css/main.css rel=stylesheet type=text/css><link href=https://www.d-j.fun/css/syntax.css rel=stylesheet type=text/css><script type=text/javascript id=hexo.configuration>var NexT=window.NexT||{},CONFIG={scheme:"Pisces",sidebar:{position:"left",display:"post"},fancybox:!0,motion:!0}</script><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9395958650601631" crossorigin=anonymous></script></head><body itemscope itemtype=http://schema.org/WebPage lang=zh-Hans><div class="container one-collumn sidebar-position-left page-home"><div class=headband></div><header id=header class=header itemscope itemtype=http://schema.org/WPHeader><div class=header-inner><div class="site-meta custom-logo"><div class=custom-logo-site-title><a href=https://www.d-j.fun/ class=brand rel=start><span class=logo-line-before><i></i></span>
+<span class=site-title>吃不上鱼的dj猫</span>
+<span class=logo-line-after><i></i></span></a></div><p class=site-subtitle>明月如镜 高悬草原映照千年岁月</p></div><div class=site-nav-toggle><button>
+<span class=btn-bar></span>
+<span class=btn-bar></span>
+<span class=btn-bar></span></button></div><nav class=site-nav><ul id=menu class=menu><li class=menu-item><a href=https://www.d-j.fun/ rel=section><i class="menu-item-icon fa fa-fw fa-home"></i><br>首页</a></li><li class=menu-item><a href=https://www.d-j.fun/categories/technical/ rel=section><i class="menu-item-icon fa fa-fw fa-code"></i><br>技术</a></li><li class=menu-item><a href=https://www.d-j.fun/categories/thoughts/ rel=section><i class="menu-item-icon fa fa-fw fa-tint"></i><br>感想</a></li><li class=menu-item><a href=https://www.d-j.fun/categories/notes/ rel=section><i class="menu-item-icon fa fa-fw fa-book"></i><br>笔记</a></li><li class=menu-item><a href=https://www.d-j.fun/post/ rel=section><i class="menu-item-icon fa fa-fw fa-archive"></i><br>归档</a></li><li class=menu-item><a href=https://www.d-j.fun/about/ rel=section><i class="menu-item-icon fa fa-fw fa-user"></i><br>关于</a></li><li class="menu-item menu-item-search"><a href=javascript:; class=popup-trigger><i class="menu-item-icon fa fa-search fa-fw"></i><br>搜索</a></li></ul><div class=site-search><div class=popup><span class="search-icon fa fa-search"></span>
+<input type=text id=local-search-input><div id=local-search-result></div><span class=popup-btn-close>close</span></div></div></nav></div></header><main id=main class=main><div class=main-inner><div class=content-wrap><div id=content class=content><section id=posts class=posts-expand><article class="post post-type-normal" itemscope itemtype=http://schema.org/Article><header class=post-header><h1 class=post-title itemprop="name headline"><a class=post-title-link href=https://www.d-j.fun/post/notes/2024/0315-pyside6-video-selector/ itemprop=url>设计一个视频帧选择器界面</a></h1><div class=post-meta><span class=post-time><span class=post-meta-item-icon><i class="fa fa-calendar-o"></i>
+</span><span class=post-meta-item-text>时间：</span>
+<time itemprop=dateCreated datetime=2016-03-22T13:04:35+08:00 content="2024-03-15">2024-03-15
+</time></span><span class=post-category>&nbsp; | &nbsp;
+<span class=post-meta-item-icon><i class="fa fa-folder-o"></i>
+</span><span class=post-meta-item-text>分类：</span>
+<span itemprop=about itemscope itemtype=https://schema.org/Thing><a href=https://www.d-j.fun/categories/notes itemprop=url rel=index><span itemprop=name>notes</span>
+</a>&nbsp;
+</span></span><span>&nbsp; | &nbsp;
+<span class=post-meta-item-icon><i class="fa fa-eye"></i>
+</span><span class=post-meta-item-text>阅读：</span>
+<span class=leancloud-visitors-count>898 字 ~2分钟</span></span></div></header><div class=post-body itemprop=articleBody><p>在本文中，我们将使用Python和PySide6库设计一个简单的界面，用于选择视频中的特定帧。该界面将包括一个视频帧显示区域、一个滑动条用于选择帧、以及一个确认选择的按钮。</p><h2 id=准备工作>准备工作</h2><p>首先，确保你已经安装了Python和PySide6库。你还需要安装OpenCV库，以便处理视频文件。你可以使用以下命令来安装所需的库：</p><div class=highlight><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>pip install PySide6 opencv-python-headless
+</span></span></code></pre></div><h2 id=代码实现>代码实现</h2><p>下面是我们设计的视频帧选择器界面的Python代码：</p><div class=highlight><pre tabindex=0 style=background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#069;font-weight:700>import</span> <span style=color:#0cf;font-weight:700>sys</span>
+</span></span><span style=display:flex><span><span style=color:#069;font-weight:700>from</span> <span style=color:#0cf;font-weight:700>PySide6.QtWidgets</span> <span style=color:#069;font-weight:700>import</span> QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget, QSlider
+</span></span><span style=display:flex><span><span style=color:#069;font-weight:700>from</span> <span style=color:#0cf;font-weight:700>PySide6.QtCore</span> <span style=color:#069;font-weight:700>import</span> Qt
+</span></span><span style=display:flex><span><span style=color:#069;font-weight:700>import</span> <span style=color:#0cf;font-weight:700>cv2</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#069;font-weight:700>class</span> <span style=color:#0a8;font-weight:700>VideoFrameSelector</span>(QMainWindow):
+</span></span><span style=display:flex><span>    <span style=color:#069;font-weight:700>def</span> __init__(self):
+</span></span><span style=display:flex><span>        <span style=color:#366>super</span>()<span style=color:#555>.</span>__init__()
+</span></span><span style=display:flex><span>        self<span style=color:#555>.</span>setWindowTitle(<span style=color:#c30>&#34;视频帧选择器&#34;</span>)
+</span></span><span style=display:flex><span>        self<span style=color:#555>.</span>video_path <span style=color:#555>=</span> <span style=color:#069;font-weight:700>None</span>
+</span></span><span style=display:flex><span>        self<span style=color:#555>.</span>current_frame <span style=color:#555>=</span> <span style=color:#f60>0</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        self<span style=color:#555>.</span>video_label <span style=color:#555>=</span> QLabel()
+</span></span><span style=display:flex><span>        self<span style=color:#555>.</span>video_label<span style=color:#555>.</span>setAlignment(Qt<span style=color:#555>.</span>AlignCenter)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        self<span style=color:#555>.</span>slider <span style=color:#555>=</span> QSlider(Qt<span style=color:#555>.</span>Horizontal)
+</span></span><span style=display:flex><span>        self<span style=color:#555>.</span>slider<span style=color:#555>.</span>setMinimum(<span style=color:#f60>0</span>)
+</span></span><span style=display:flex><span>        self<span style=color:#555>.</span>slider<span style=color:#555>.</span>setMaximum(<span style=color:#f60>0</span>)
+</span></span><span style=display:flex><span>        self<span style=color:#555>.</span>slider<span style=color:#555>.</span>valueChanged<span style=color:#555>.</span>connect(self<span style=color:#555>.</span>change_frame)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        self<span style=color:#555>.</span>confirm_button <span style=color:#555>=</span> QPushButton(<span style=color:#c30>&#34;确认选择&#34;</span>)
+</span></span><span style=display:flex><span>        self<span style=color:#555>.</span>confirm_button<span style=color:#555>.</span>clicked<span style=color:#555>.</span>connect(self<span style=color:#555>.</span>confirm_selection)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        layout <span style=color:#555>=</span> QVBoxLayout()
+</span></span><span style=display:flex><span>        layout<span style=color:#555>.</span>addWidget(self<span style=color:#555>.</span>video_label)
+</span></span><span style=display:flex><span>        layout<span style=color:#555>.</span>addWidget(self<span style=color:#555>.</span>slider)
+</span></span><span style=display:flex><span>        layout<span style=color:#555>.</span>addWidget(self<span style=color:#555>.</span>confirm_button)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        central_widget <span style=color:#555>=</span> QWidget()
+</span></span><span style=display:flex><span>        central_widget<span style=color:#555>.</span>setLayout(layout)
+</span></span><span style=display:flex><span>        self<span style=color:#555>.</span>setCentralWidget(central_widget)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#069;font-weight:700>def</span> <span style=color:#c0f>load_video</span>(self, video_path):
+</span></span><span style=display:flex><span>        self<span style=color:#555>.</span>video_path <span style=color:#555>=</span> video_path
+</span></span><span style=display:flex><span>        cap <span style=color:#555>=</span> cv2<span style=color:#555>.</span>VideoCapture(video_path)
+</span></span><span style=display:flex><span>        total_frames <span style=color:#555>=</span> <span style=color:#366>int</span>(cap<span style=color:#555>.</span>get(cv2<span style=color:#555>.</span>CAP_PROP_FRAME_COUNT))
+</span></span><span style=display:flex><span>        self<span style=color:#555>.</span>slider<span style=color:#555>.</span>setMaximum(total_frames <span style=color:#555>-</span> <span style=color:#f60>1</span>)
+</span></span><span style=display:flex><span>        cap<span style=color:#555>.</span>release()
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#069;font-weight:700>def</span> <span style=color:#c0f>change_frame</span>(self, value):
+</span></span><span style=display:flex><span>        self<span style=color:#555>.</span>current_frame <span style=color:#555>=</span> value
+</span></span><span style=display:flex><span>        cap <span style=color:#555>=</span> cv2<span style=color:#555>.</span>VideoCapture(self<span style=color:#555>.</span>video_path)
+</span></span><span style=display:flex><span>        cap<span style=color:#555>.</span>set(cv2<span style=color:#555>.</span>CAP_PROP_POS_FRAMES, self<span style=color:#555>.</span>current_frame)
+</span></span><span style=display:flex><span>        ret, frame <span style=color:#555>=</span> cap<span style=color:#555>.</span>read()
+</span></span><span style=display:flex><span>        <span style=color:#069;font-weight:700>if</span> ret:
+</span></span><span style=display:flex><span>            frame_rgb <span style=color:#555>=</span> cv2<span style=color:#555>.</span>cvtColor(frame, cv2<span style=color:#555>.</span>COLOR_BGR2RGB)
+</span></span><span style=display:flex><span>            height, width, channel <span style=color:#555>=</span> frame_rgb<span style=color:#555>.</span>shape
+</span></span><span style=display:flex><span>            bytes_per_line <span style=color:#555>=</span> <span style=color:#f60>3</span> <span style=color:#555>*</span> width
+</span></span><span style=display:flex><span>            qt_img <span style=color:#555>=</span> QImage(frame_rgb<span style=color:#555>.</span>data, width, height, bytes_per_line, QImage<span style=color:#555>.</span>Format_RGB888)
+</span></span><span style=display:flex><span>            self<span style=color:#555>.</span>video_label<span style=color:#555>.</span>setPixmap(QPixmap<span style=color:#555>.</span>fromImage(qt_img))
+</span></span><span style=display:flex><span>        cap<span style=color:#555>.</span>release()
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#069;font-weight:700>def</span> <span style=color:#c0f>confirm_selection</span>(self):
+</span></span><span style=display:flex><span>        <span style=color:#366>print</span>(<span style=color:#c30>&#34;选中帧:&#34;</span>, self<span style=color:#555>.</span>current_frame)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#069;font-weight:700>if</span> __name__ <span style=color:#555>==</span> <span style=color:#c30>&#34;__main__&#34;</span>:
+</span></span><span style=display:flex><span>    app <span style=color:#555>=</span> QApplication(sys<span style=color:#555>.</span>argv)
+</span></span><span style=display:flex><span>    window <span style=color:#555>=</span> VideoFrameSelector()
+</span></span><span style=display:flex><span>    window<span style=color:#555>.</span>setGeometry(<span style=color:#f60>100</span>, <span style=color:#f60>100</span>, <span style=color:#f60>800</span>, <span style=color:#f60>600</span>)
+</span></span><span style=display:flex><span>    window<span style=color:#555>.</span>show()
+</span></span><span style=display:flex><span>    sys<span style=color:#555>.</span>exit(app<span style=color:#555>.</span>exec())
+</span></span></code></pre></div><p>当你运行这个程序时，它首先创建了一个名为"视频帧选择器"的窗口。在这个窗口中，你可以加载一个视频文件，并通过滑动滑动条来选择视频的特定帧。程序还提供了一个"确认选择"按钮，用于确认你选择的帧。</p><p>程序的主要组件包括一个用于显示视频帧的标签(video_label)、一个滑动条(slider)和一个确认选择按钮(confirm_button)。通过滑动滑动条，你可以选择视频的不同帧，并在标签中显示所选帧的视频画面。当你点击确认选择按钮时，程序将打印出你选择的帧数。</p><p>在程序的主函数中，它创建了一个应用程序对象(QApplication)和一个窗口对象(VideoFrameSelector)。然后设置窗口的大小和位置，并将窗口显示出来。程序将在用户关闭窗口后退出。</p><p>当你运行程序时，你可以通过加载视频文件，并使用滑动条选择不同的帧来查看视频的内容。当你找到想要的帧时，可以点击确认选择按钮，程序将在控制台中输出你选择的帧数。</p><p>总的来说，这个程序演示了如何使用Python和PySide6库创建一个简单的视频帧选择器界面，以便于用户在视频文件中选择特定的帧。</p></div><footer class=post-footer><div class=post-tags><a href=https://www.d-j.fun/tags/xxx rel=tag title=xxx>#xxx#</a></div><div class=post-nav><div class="post-nav-next post-nav-item"></div><div class="post-nav-prev post-nav-item"><a href=https://www.d-j.fun/post/notes/2024/0312-aura-live-wallpaper/ rel=prev title=ChatGPT、Midjourney、PixVerse结合：打造动态壁纸APP>ChatGPT、Midjourney、PixVerse结合：打造动态壁纸APP <i class="fa fa-chevron-right"></i></a></div></div><div id=vcomments></div></footer></article></section></div></div><div class=sidebar-toggle><div class=sidebar-toggle-line-wrap><span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+<span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+<span class="sidebar-toggle-line sidebar-toggle-line-last"></span></div></div><aside id=sidebar class=sidebar><div class=sidebar-inner><ul class="sidebar-nav motion-element"><li class="sidebar-nav-toc sidebar-nav-active" data-target=post-toc-wrap>文章目录</li><li class=sidebar-nav-overview data-target=site-overview>站点概览</li></ul><section class="site-overview sidebar-panel"><div class="site-author motion-element" itemprop=author itemscope itemtype=http://schema.org/Person><img class=site-author-image itemprop=image src=https://www.d-j.fun/img/logo.png alt=D&amp;J><p class=site-author-name itemprop=name>D&amp;J</p><p class="site-description motion-element" itemprop=description>程序员</p></div><nav class="site-state motion-element"><div class="site-state-item site-state-posts"><a href=https://www.d-j.fun/post/><span class=site-state-item-count>26</span>
+<span class=site-state-item-name>日志</span></a></div><div class="site-state-item site-state-categories"><a href=https://www.d-j.fun/categories/><span class=site-state-item-count>3</span>
+<span class=site-state-item-name>分类</span></a></div><div class="site-state-item site-state-tags"><a href=https://www.d-j.fun/tags/><span class=site-state-item-count>17</span>
+<span class=site-state-item-name>标签</span></a></div></nav><div class="links-of-author motion-element"><span class=links-of-author-item><a href=https://github.com/micywin target=_blank title=GitHub><i class="fa fa-fw fa-github"></i>
+GitHub</a></span></div></section><section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active"><div class=post-toc><div class=post-toc-content><nav id=TableOfContents><ul><li><a href=#准备工作>准备工作</a></li><li><a href=#代码实现>代码实现</a></li></ul></nav></div></div></section></div></aside></div></main><footer id=footer class=footer><div class=footer-inner><div class=copyright><span itemprop=copyrightYear>&copy;
+2009 - 2024</span>
+<span class=with-love><i class="fa fa-heart"></i></span>
+<span class=author itemprop=copyrightHolder>吃不上鱼的dj猫</span></div><div class=powered-by>Powered by - <a class=theme-link href=http://gohugo.io target=_blank title=hugo>Hugo v0.123.8</a></div><div class=theme-info>Theme by - <a class=theme-link href=https://github.com/micywin/micywin.github.io target=_blank>NexT
+</a><a href=https://beian.miit.gov.cn/ target=_blank>沪ICP备14008426号-3</a></div></div></footer><div class=back-to-top><i class="fa fa-arrow-up"></i>
+<span id=scrollpercent><span>0</span>%</span></div></div><script>var _hmt=_hmt||[];(function(){var e,t=document.createElement("script");t.src="//hm.baidu.com/hm.js?d99271cdde903024e3e5c6bee73674ca",e=document.getElementsByTagName("script")[0],e.parentNode.insertBefore(t,e)})()</script><script type=text/javascript>Object.prototype.toString.call(window.Promise)!=="[object Function]"&&(window.Promise=null)</script><script type=text/javascript src="https://www.d-j.fun/js/vendor/jquery/index.js?v=2.1.3"></script><script type=text/javascript src="https://www.d-j.fun/js/vendor/fastclick/lib/fastclick.min.js?v=1.0.6"></script><script type=text/javascript src="https://www.d-j.fun/js/vendor/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script><script type=text/javascript src="https://www.d-j.fun/js/vendor/velocity/velocity.min.js?v=1.2.1"></script><script type=text/javascript src="https://www.d-j.fun/js/vendor/velocity/velocity.ui.min.js?v=1.2.1"></script><script src="https://www.d-j.fun/js/vendor/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script><script src="https://www.d-j.fun/js/vendor/fancybox/jquery.fancybox.pack.js?v=2.1.5"></script><script type=text/javascript src=https://www.d-j.fun/js/utils.js></script><script type=text/javascript src=https://www.d-j.fun/js/motion.js></script><script type=text/javascript src=https://www.d-j.fun/js/affix.js></script><script type=text/javascript src=https://www.d-j.fun/js/schemes/pisces.js></script><script type=text/javascript src=https://www.d-j.fun/js/scrollspy.js></script><script type=text/javascript src=https://www.d-j.fun/js/post-details.js></script><script type=text/javascript src=https://www.d-j.fun/js/toc.js></script><script type=text/javascript src=https://www.d-j.fun/js/bootstrap.js></script><script type=text/javascript src=https://www.d-j.fun/js/search.js></script><script type=text/x-mathjax-config>
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX", "output/HTML-CSS"],
+    tex2jax: {
+      inlineMath: [ ['$','$'] ],
+      displayMath: [ ['$$','$$'] ],
+      processEscapes: true
+    },
+    "HTML-CSS": { fonts: ["TeX"] }
+  });
+</script><script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML' async></script><script src=//unpkg.com/valine/dist/Valine.min.js></script><script type=text/javascript>new Valine({el:"#vcomments",appId:"OHRSTedbIkBw8vMft7nXrSD6-gzGzoHsz",appKey:"qSWgGIqVOpJ10tsWsNJEI9I7",visitor:!0,placeholder:" 欢迎留下您的宝贵建议，请填写您的昵称和邮箱便于后续交流. ^_^ ",requiredFields:["nick","mail"],lang:"zh"})</script></body></html>
